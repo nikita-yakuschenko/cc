@@ -1,0 +1,45 @@
+import type { Metadata } from "next";
+import { Manrope, IBM_Plex_Mono } from "next/font/google";
+import { Toaster } from "sonner";
+import "./globals.css";
+import { APP_NAME } from "@/lib/constants";
+
+const sans = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "cyrillic"],
+});
+
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono",
+  weight: ["400", "500"],
+  subsets: ["latin", "cyrillic"],
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: "Управляемые цифровые переходы. Ссылки, UTM и аналитика.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="ru">
+      <body className={`${sans.variable} ${mono.variable} antialiased`}>
+        {children}
+        <Toaster
+          position="top-right"
+          closeButton
+          toastOptions={{
+            className: "font-[family-name:var(--font-manrope)]",
+          }}
+        />
+      </body>
+    </html>
+  );
+}

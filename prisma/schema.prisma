@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         Role        @default(USER)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  shortLinks   ShortLink[]
+  campaigns    Campaign[]
+  auditLogs    AuditLog[]
+}
+
+model LinkCategory {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  isActive    Boolean     @default(true)
+  sortOrder   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  shortLinks  ShortLink[]
+}
+
+model UtmSource {
+  id        String   @id @default(cuid())
+  name      String
+  value     String   @unique
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UtmMedium {
+  id        String   @id @default(cuid())
+  name      String
+  value     String   @unique
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ShortLink {
+  id              String        @id @default(cuid())
+  name            String?
+  code            String
+  codeNormalized  String
+  publicPath      String        @unique
+  categoryId      String?
+  category        LinkCategory? @relation(fields: [categoryId], references: [id])
+  originalUrl     String
+  targetUrl       String
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  createdById       String
+  createdBy         User          @relation(fields: [createdById], references: [id])
+  createdFromIpHash String?
+  isAnonymous       Boolean       @default(false)
+  isActive          Boolean       @default(true)
+  expiresAt         DateTime?
+  clickCountCache   Int           @default(0)
+  deletedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  clickEvents       ClickEvent[]
+
+  @@index([codeNormalized])
+  @@index([categoryId, codeNormalized])
+  @@index([createdById])
+  @@index([isActive])
+  @@index([utmCampaign])
+  @@index([utmSource])
+  @@index([deletedAt])
+  @@index([createdFromIpHash])
+  @@index([isAnonymous])
+}
+
+model ClickEvent {
+  id              String    @id @default(cuid())
+  shortLinkId     String
+  shortLink       ShortLink @relation(fields: [shortLinkId], references: [id], onDelete: Cascade)
+  occurredAt      DateTime  @default(now())
+  referer         String?
+  userAgent       String?
+  deviceType      String?
+  browser         String?
+  operatingSystem String?
+  ipHash          String?
+  isBot           Boolean   @default(false)
+  metadata        Json?
+
+  @@index([shortLinkId, occurredAt])
+  @@index([occurredAt])
+  @@index([isBot])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

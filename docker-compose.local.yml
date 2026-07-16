@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: go_avgst
+      POSTGRES_PASSWORD: go_avgst
+      POSTGRES_DB: go_avgst
+    ports:
+      - "55433:5432"
+    volumes:
+      - go_avgst_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U go_avgst -d go_avgst"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3330
+      DATABASE_URL: postgresql://go_avgst:go_avgst@db:5432/go_avgst?schema=public
+      APP_URL: http://localhost:3330
+      NEXT_PUBLIC_APP_URL: http://localhost:3330
+      AUTH_SECRET: local-dev-auth-secret-change-me
+      IP_HASH_SALT: local-dev-ip-salt
+    ports:
+      - "3330:3330"
+
+volumes:
+  go_avgst_pg:
