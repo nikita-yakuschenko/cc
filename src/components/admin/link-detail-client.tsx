@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  deleteLinkAction,
   toggleLinkAction,
   updateLinkAction,
 } from "@/server/actions/links";
 import { getPublicAppUrl } from "@/lib/env-public";
 import { Copy, Download, ExternalLink } from "lucide-react";
+import { DeleteLinkDialog } from "@/components/admin/delete-link-dialog";
 
 type LinkDetail = {
   id: string;
@@ -60,6 +60,7 @@ export function LinkDetailClient({
       : "",
   );
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -86,17 +87,6 @@ export function LinkDetailClient({
     }
     toast.success(link.isActive ? "Ссылка отключена" : "Ссылка включена");
     router.refresh();
-  }
-
-  async function remove() {
-    if (!confirm("Удалить ссылку?")) return;
-    const result = await deleteLinkAction(link.id);
-    if (!result.ok) {
-      toast.error(result.error);
-      return;
-    }
-    toast.success("Удалено");
-    router.push("/admin/links");
   }
 
   return (
@@ -131,12 +121,21 @@ export function LinkDetailClient({
             {link.isActive ? "Отключить" : "Включить"}
           </Button>
           {canDelete ? (
-            <Button variant="danger" onClick={remove}>
+            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
               Удалить
             </Button>
           ) : null}
         </div>
       </div>
+
+      {canDelete ? (
+        <DeleteLinkDialog
+          linkId={link.id}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          redirectTo="/admin/links"
+        />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
