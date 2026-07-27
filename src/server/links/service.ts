@@ -23,6 +23,7 @@ import {
   isSafeRedirectTarget,
 } from "@/server/links/url";
 import { writeAuditLog } from "@/server/audit/log";
+import { fetchPageHeading } from "@/server/links/page-title";
 
 export type CreateLinkInput = {
   name?: string;
@@ -168,10 +169,15 @@ export async function createShortLink(
 
   const unique = await ensureUniqueCode({ code, categorySlug });
 
+  let linkName = input.name?.trim() || null;
+  if (!linkName) {
+    linkName = await fetchPageHeading(targetUrl);
+  }
+
   const link = await prisma.$transaction(async (tx) => {
     const created = await tx.shortLink.create({
       data: {
-        name: input.name?.trim() || null,
+        name: linkName,
         code: unique.code,
         codeNormalized: unique.codeNormalized,
         publicPath: unique.publicPath,
@@ -266,10 +272,12 @@ export async function createAnonymousShortLink(
   }
 
   const unique = await ensureUniqueCode({ code, categorySlug: null });
+  const linkName = await fetchPageHeading(analysis.href);
 
   return prisma.$transaction(async (tx) => {
     const created = await tx.shortLink.create({
       data: {
+        name: linkName,
         code: unique.code,
         codeNormalized: unique.codeNormalized,
         publicPath: unique.publicPath,
@@ -435,6 +443,28 @@ export function hashIp(ip: string | null | undefined): string | null {
   if (!ip) return null;
   const salt = getEnv().IP_HASH_SALT;
   return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
+}
+
+/** Подтягивает H1/title для ссылок без названия (до 15 за запрос списка). */
+export async function backfillMissingLinkNames(
+  links: Array<{ id: string; name: string | null; targetUrl: string }>,
+): Promise<void> {
+  const missing = links.filter((link) => !link.name?.trim());
+  if (missing.length === 0) return;
+
+  await Promise.all(
+    missing.slice(0, 15).map(async (link) => {
+      const title = await fetchPageHeading(link.targetUrl);
+      if (!title) return;
+
+      await prisma.shortLink.update({
+        where: { id: link.id },
+        data: { name: title },
+      });
+
+      link.name = title;
+    }),
+  );
 }
 
 export type ListLinksFilters = {

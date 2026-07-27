@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireSession, canManageAllLinks } from "@/server/auth/guards";
-import { listShortLinks } from "@/server/links/service";
+import { listShortLinks, backfillMissingLinkNames } from "@/server/links/service";
 import { prisma } from "@/server/db";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ export default async function LinksPage({
     onlyOwn,
     userId: session.user.id,
   });
+
+  await backfillMissingLinkNames(result.items);
 
   const [categories, authors, sources] = await Promise.all([
     prisma.linkCategory.findMany({ orderBy: { sortOrder: "asc" } }),

@@ -423,11 +423,11 @@ export function CreateLinkWizard({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Название (необязательно)</Label>
+              <Label>Название (необязательно, иначе H1 страницы)</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Модуль 120 · VK CPC"
+                placeholder="Оставьте пустым — подставим заголовок страницы"
               />
             </div>
             <div className="space-y-2">
