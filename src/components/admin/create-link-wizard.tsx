@@ -13,12 +13,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { analyzeUrl, applyUtmToUrl } from "@/lib/url";
 import { normalizeUtmValue } from "@/lib/code";
 import { getPublicAppUrl } from "@/lib/env-public";
-import { Copy, Download, ExternalLink, Check } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Copy,
+  Download,
+  ExternalLink,
+  Link2,
+  Sparkles,
+  Tags,
+} from "lucide-react";
 import { createLinkAction } from "@/server/actions/links";
+import { cn } from "@/lib/utils";
 
 type CatalogItem = { id: string; name: string; value?: string; slug?: string };
 
@@ -190,27 +199,76 @@ export function CreateLinkWizard({
         <h2 className="text-2xl font-semibold text-carbon">Создание ссылки</h2>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <ol className="grid gap-3 sm:grid-cols-4">
         {[
-          { n: 1, label: "Ссылка" },
-          { n: 2, label: "UTM" },
-          { n: 3, label: "Короткий адрес" },
-          { n: 4, label: "Готово" },
-        ].map((s) => (
-          <Badge
-            key={s.n}
-            className={
-              step === s.n
-                ? "bg-deep-current text-white"
-                : step > s.n
-                  ? "bg-flow-green/15 text-flow-green"
-                  : ""
-            }
-          >
-            {s.n}. {s.label}
-          </Badge>
-        ))}
-      </div>
+          { n: 1 as const, label: "Ссылка", hint: "Исходный URL", Icon: Link2 },
+          { n: 2 as const, label: "UTM", hint: "Метки и сценарий", Icon: Tags },
+          {
+            n: 3 as const,
+            label: "Короткий адрес",
+            hint: "Категория и код",
+            Icon: Sparkles,
+          },
+          {
+            n: 4 as const,
+            label: "Готово",
+            hint: "Ссылка создана",
+            Icon: CheckCircle2,
+          },
+        ].map((s, index, list) => {
+          const done = step > s.n;
+          const active = step === s.n;
+          const Icon = s.Icon;
+          return (
+            <li key={s.n} className="relative">
+              {index < list.length - 1 ? (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute top-7 right-0 hidden h-0.5 w-[calc(50%+0.375rem)] translate-x-1/2 sm:block",
+                    done ? "bg-flow-green" : "bg-border",
+                  )}
+                />
+              ) : null}
+              <div
+                className={cn(
+                  "relative flex items-start gap-3 rounded-2xl border px-4 py-4 transition-colors",
+                  active &&
+                    "border-flow-green bg-flow-green/10 shadow-[0_8px_24px_rgba(39,97,82,0.12)]",
+                  done && !active && "border-flow-green/40 bg-white",
+                  !active && !done && "border-border bg-white",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
+                    active && "bg-deep-current text-white",
+                    done && !active && "bg-flow-green text-white",
+                    !active && !done && "bg-canvas text-muted",
+                  )}
+                >
+                  {done && !active ? (
+                    <Check className="h-5 w-5" strokeWidth={2.5} />
+                  ) : (
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  )}
+                </span>
+                <div className="min-w-0 pt-0.5">
+                  <p
+                    className={cn(
+                      "text-sm font-semibold",
+                      active || done ? "text-carbon" : "text-muted",
+                    )}
+                  >
+                    {s.n}. {s.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">{s.hint}</p>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
 
       {step === 1 ? (
         <Card>
