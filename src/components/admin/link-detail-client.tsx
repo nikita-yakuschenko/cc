@@ -188,7 +188,10 @@ export function LinkDetailClient({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <div
+          id="stats"
+          className="scroll-mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-5"
+        >
           <h3 className="font-semibold">Статистика (30 дней, без ботов)</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-slate-50 p-3">
