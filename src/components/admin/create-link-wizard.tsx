@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,79 @@ import {
   Link2,
   Sparkles,
   Tags,
+  X,
 } from "lucide-react";
 import { createLinkAction } from "@/server/actions/links";
 import { cn } from "@/lib/utils";
 
 type CatalogItem = { id: string; name: string; value?: string; slug?: string };
+
+function ClearableSelect({
+  value,
+  onChange,
+  placeholder,
+  children,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex gap-2">
+      <Select
+        className="min-w-0 flex-1"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">{placeholder}</option>
+        {children}
+      </Select>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        aria-label="Очистить"
+        title="Очистить"
+        disabled={!value}
+        onClick={() => onChange("")}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function ClearableInput({
+  value,
+  onChange,
+  ...props
+}: Omit<ComponentProps<typeof Input>, "onChange" | "value"> & {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex gap-2">
+      <Input
+        className="min-w-0 flex-1"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        {...props}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        aria-label="Очистить"
+        title="Очистить"
+        disabled={!value}
+        onClick={() => onChange("")}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
 
 type CreatedLink = {
   id: string;
@@ -367,37 +435,37 @@ export function CreateLinkWizard({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Источник (utm_source) *</Label>
-                  <Select
+                  <ClearableSelect
                     value={utmSource}
-                    onChange={(e) => setUtmSource(e.target.value)}
+                    onChange={setUtmSource}
+                    placeholder="Выберите источник"
                   >
-                    <option value="">Выберите источник</option>
                     {sources.map((s) => (
                       <option key={s.id} value={s.value}>
                         {s.name} ({s.value})
                       </option>
                     ))}
-                  </Select>
+                  </ClearableSelect>
                 </div>
                 <div className="space-y-2">
                   <Label>Канал (utm_medium) *</Label>
-                  <Select
+                  <ClearableSelect
                     value={utmMedium}
-                    onChange={(e) => setUtmMedium(e.target.value)}
+                    onChange={setUtmMedium}
+                    placeholder="Выберите канал"
                   >
-                    <option value="">Выберите канал</option>
                     {media.map((s) => (
                       <option key={s.id} value={s.value}>
                         {s.name} ({s.value})
                       </option>
                     ))}
-                  </Select>
+                  </ClearableSelect>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Кампания (utm_campaign)</Label>
-                  <Input
+                  <ClearableInput
                     value={utmCampaign}
-                    onChange={(e) => setUtmCampaign(e.target.value)}
+                    onChange={setUtmCampaign}
                     placeholder="summer_houses_2026"
                   />
                   {utmCampaign ? (
@@ -408,17 +476,14 @@ export function CreateLinkWizard({
                 </div>
                 <div className="space-y-2">
                   <Label>Содержание (utm_content)</Label>
-                  <Input
+                  <ClearableInput
                     value={utmContent}
-                    onChange={(e) => setUtmContent(e.target.value)}
+                    onChange={setUtmContent}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Ключевое слово (utm_term)</Label>
-                  <Input
-                    value={utmTerm}
-                    onChange={(e) => setUtmTerm(e.target.value)}
-                  />
+                  <ClearableInput value={utmTerm} onChange={setUtmTerm} />
                 </div>
               </div>
             ) : null}
