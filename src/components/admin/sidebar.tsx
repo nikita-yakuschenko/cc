@@ -7,10 +7,9 @@ import {
   FolderTree,
   Link2,
   LogOut,
-  Megaphone,
-  Radio,
   Settings,
   Share2,
+  Tags,
   Users,
 } from "lucide-react";
 import type { Role } from "@prisma/client";
@@ -21,23 +20,11 @@ import { RelayWordmark } from "@/components/brand/relay-mark";
 const nav = [
   { href: "/admin", label: "Создание ссылки", icon: Link2 },
   { href: "/admin/links", label: "Все ссылки", icon: Share2 },
-  { href: "/admin/campaigns", label: "Кампании", icon: Megaphone },
+  { href: "/admin/utm-settings", label: "Настройки UTM", icon: Tags },
   {
     href: "/admin/categories",
     label: "Категории",
     icon: FolderTree,
-    roles: ["ADMIN"] as AppRole[],
-  },
-  {
-    href: "/admin/sources",
-    label: "Источники",
-    icon: Radio,
-    roles: ["ADMIN"] as AppRole[],
-  },
-  {
-    href: "/admin/media",
-    label: "Каналы",
-    icon: Radio,
     roles: ["ADMIN"] as AppRole[],
   },
   { href: "/admin/stats", label: "Статистика", icon: BarChart3 },
@@ -79,7 +66,12 @@ export function AdminSidebar({
             const active =
               item.href === "/admin"
                 ? pathname === "/admin"
-                : pathname.startsWith(item.href);
+                : item.href === "/admin/utm-settings"
+                  ? pathname.startsWith("/admin/utm-settings") ||
+                    pathname.startsWith("/admin/campaigns") ||
+                    pathname.startsWith("/admin/sources") ||
+                    pathname.startsWith("/admin/media")
+                  : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link

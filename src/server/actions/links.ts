@@ -203,6 +203,7 @@ export async function upsertUtmSourceAction(raw: unknown) {
     entityType: "UtmSource",
     entityId: item.id,
   });
+  revalidatePath("/admin/utm-settings");
   revalidatePath("/admin/sources");
   return { ok: true as const, item };
 }
@@ -232,6 +233,7 @@ export async function upsertUtmMediumAction(raw: unknown) {
     entityType: "UtmMedium",
     entityId: item.id,
   });
+  revalidatePath("/admin/utm-settings");
   revalidatePath("/admin/media");
   return { ok: true as const, item };
 }
@@ -285,6 +287,7 @@ export async function upsertCampaignAction(raw: unknown) {
     entityType: "Campaign",
     entityId: item.id,
   });
+  revalidatePath("/admin/utm-settings");
   revalidatePath("/admin/campaigns");
   return { ok: true as const, item };
 }

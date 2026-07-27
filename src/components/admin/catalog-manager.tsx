@@ -22,12 +22,14 @@ export function CatalogManager({
   items,
   mode,
   action,
+  hideHeader = false,
 }: {
   title: string;
   description: string;
   items: Item[];
   mode: "category" | "source" | "medium" | "campaign";
   action: (data: unknown) => Promise<{ ok: boolean; error?: string }>;
+  hideHeader?: boolean;
 }) {
   const [name, setName] = useState("");
   const [slugOrValue, setSlugOrValue] = useState("");
@@ -56,10 +58,12 @@ export function CatalogManager({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
-      </div>
+      {hideHeader ? null : (
+        <div>
+          <h2 className="text-2xl font-semibold">{title}</h2>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        </div>
+      )}
 
       <form
         onSubmit={onCreate}
