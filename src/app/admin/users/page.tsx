@@ -12,6 +12,7 @@ export default async function UsersPage() {
       email: true,
       role: true,
       isActive: true,
+      bitrixId: true,
     },
   });
 

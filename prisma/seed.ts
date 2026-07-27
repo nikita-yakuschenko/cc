@@ -1,5 +1,4 @@
 import "dotenv/config";
-import { hash } from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
@@ -41,44 +40,19 @@ const media = [
 ];
 
 async function main() {
-  const email = (process.env.SEED_ADMIN_EMAIL || "admin@avgst.ru").toLowerCase();
-  const password = process.env.SEED_ADMIN_PASSWORD || "ChangeMe123!";
-  const name = process.env.SEED_ADMIN_NAME || "Администратор";
-
-  const passwordHash = await hash(password, 12);
-
-  await prisma.user.upsert({
-    where: { email },
-    update: {
-      name,
-      passwordHash,
-      role: "ADMIN",
-      isActive: true,
-    },
-    create: {
-      email,
-      name,
-      passwordHash,
-      role: "ADMIN",
-    },
-  });
-
   // системный пользователь для анонимных сокращений с главной
-  const guestHash = await hash(
-    `guest-${process.env.AUTH_SECRET || "local-guest-secret"}`,
-    12,
-  );
   await prisma.user.upsert({
     where: { email: "guest@system.go.avgst.ru" },
     update: {
       name: "Гость",
       isActive: true,
       role: "USER",
+      passwordHash: null,
     },
     create: {
       email: "guest@system.go.avgst.ru",
       name: "Гость",
-      passwordHash: guestHash,
+      passwordHash: null,
       role: "USER",
       isActive: true,
     },
@@ -121,7 +95,10 @@ async function main() {
     });
   }
 
-  console.log("Seed completed:", { admin: email, categories: categories.length });
+  console.log("Seed completed:", {
+    guest: "guest@system.go.avgst.ru",
+    categories: categories.length,
+  });
 }
 
 main()

@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { upsertUserAction } from "@/server/actions/links";
+import { updateUserAction } from "@/server/actions/links";
+import { GUEST_USER_EMAIL } from "@/lib/constants";
 
 type UserRow = {
   id: string;
@@ -14,22 +13,26 @@ type UserRow = {
   email: string;
   role: "USER" | "MANAGER" | "ADMIN";
   isActive: boolean;
+  bitrixId: string | null;
 };
 
 export function UsersManager({ users }: { users: UserRow[] }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"USER" | "MANAGER" | "ADMIN">("USER");
+  const visible = users.filter((u) => u.email !== GUEST_USER_EMAIL);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    const result = await upsertUserAction({ name, email, password, role });
+  async function onSave(
+    user: UserRow,
+    role: UserRow["role"],
+    isActive: boolean,
+  ) {
+    setPendingId(user.id);
+    const result = await updateUserAction({ id: user.id, role, isActive });
+    setPendingId(null);
     if (!result.ok) {
       toast.error(result.error);
       return;
     }
-    toast.success("Пользователь создан");
+    toast.success("Сохранено");
     window.location.reload();
   }
 
@@ -38,54 +41,10 @@ export function UsersManager({ users }: { users: UserRow[] }) {
       <div>
         <h2 className="text-2xl font-semibold">Пользователи</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Управление доступом: USER, MANAGER, ADMIN
+          Вход только через Bitrix24. Новые пользователи появляются после
+          первого входа. Здесь можно назначить роль или отключить доступ.
         </p>
       </div>
-
-      <form
-        onSubmit={onCreate}
-        className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-5"
-      >
-        <div className="space-y-1">
-          <Label>Имя</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="space-y-1">
-          <Label>Email</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>Пароль</Label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>Роль</Label>
-          <Select
-            value={role}
-            onChange={(e) =>
-              setRole(e.target.value as "USER" | "MANAGER" | "ADMIN")
-            }
-          >
-            <option value="USER">USER</option>
-            <option value="MANAGER">MANAGER</option>
-            <option value="ADMIN">ADMIN</option>
-          </Select>
-        </div>
-        <div className="flex items-end">
-          <Button type="submit">Добавить</Button>
-        </div>
-      </form>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-sm">
@@ -93,24 +52,93 @@ export function UsersManager({ users }: { users: UserRow[] }) {
             <tr>
               <th className="px-4 py-3 text-left">Имя</th>
               <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Bitrix ID</th>
               <th className="px-4 py-3 text-left">Роль</th>
               <th className="px-4 py-3 text-left">Статус</th>
+              <th className="px-4 py-3 text-left" />
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-slate-50">
-                <td className="px-4 py-3">{u.name}</td>
-                <td className="px-4 py-3">{u.email}</td>
-                <td className="px-4 py-3">{u.role}</td>
-                <td className="px-4 py-3">
-                  {u.isActive ? "Активен" : "Отключён"}
+            {visible.map((u) => (
+              <UserRowEditor
+                key={u.id}
+                user={u}
+                busy={pendingId === u.id}
+                onSave={onSave}
+              />
+            ))}
+            {visible.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-slate-500"
+                >
+                  Пока никто не входил через Bitrix24
                 </td>
               </tr>
-            ))}
+            ) : null}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function UserRowEditor({
+  user,
+  busy,
+  onSave,
+}: {
+  user: UserRow;
+  busy: boolean;
+  onSave: (
+    user: UserRow,
+    role: UserRow["role"],
+    isActive: boolean,
+  ) => Promise<void>;
+}) {
+  const [role, setRole] = useState(user.role);
+  const [isActive, setIsActive] = useState(user.isActive);
+  const dirty = role !== user.role || isActive !== user.isActive;
+
+  return (
+    <tr className="border-b border-slate-50">
+      <td className="px-4 py-3">{user.name}</td>
+      <td className="px-4 py-3">{user.email}</td>
+      <td className="px-4 py-3 text-slate-500">{user.bitrixId || "—"}</td>
+      <td className="px-4 py-3">
+        <Select
+          value={role}
+          onChange={(e) =>
+            setRole(e.target.value as "USER" | "MANAGER" | "ADMIN")
+          }
+          disabled={busy}
+        >
+          <option value="USER">USER</option>
+          <option value="MANAGER">MANAGER</option>
+          <option value="ADMIN">ADMIN</option>
+        </Select>
+      </td>
+      <td className="px-4 py-3">
+        <Select
+          value={isActive ? "1" : "0"}
+          onChange={(e) => setIsActive(e.target.value === "1")}
+          disabled={busy}
+        >
+          <option value="1">Активен</option>
+          <option value="0">Отключён</option>
+        </Select>
+      </td>
+      <td className="px-4 py-3">
+        <Button
+          type="button"
+          size="sm"
+          disabled={!dirty || busy}
+          onClick={() => onSave(user, role, isActive)}
+        >
+          Сохранить
+        </Button>
+      </td>
+    </tr>
   );
 }

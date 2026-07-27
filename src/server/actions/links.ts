@@ -12,7 +12,6 @@ import {
 import { checkRateLimit } from "@/server/rate-limit";
 import { prisma } from "@/server/db";
 import { writeAuditLog } from "@/server/audit/log";
-import { hash } from "bcryptjs";
 import { normalizeUtmValue } from "@/server/links/code";
 import { isReservedPath } from "@/server/links/code";
 
@@ -291,72 +290,37 @@ export async function upsertCampaignAction(raw: unknown) {
   return { ok: true as const, item };
 }
 
-const userSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1),
-  email: z.string().email(),
+const userUpdateSchema = z.object({
+  id: z.string().min(1),
   role: z.enum(["USER", "MANAGER", "ADMIN"]),
-  password: z.string().min(8).optional(),
-  isActive: z.boolean().optional(),
+  isActive: z.boolean(),
 });
 
-export async function upsertUserAction(raw: unknown) {
+/** Пользователи создаются только через вход Bitrix — здесь только роль и статус */
+export async function updateUserAction(raw: unknown) {
   const actor = await requireUser();
   if (actor.role !== "ADMIN") {
     return { ok: false as const, error: "Недостаточно прав" };
   }
-  const parsed = userSchema.safeParse(raw);
+  const parsed = userUpdateSchema.safeParse(raw);
   if (!parsed.success) {
     return { ok: false as const, error: "Некорректные данные" };
   }
 
-  const email = parsed.data.email.toLowerCase();
-  if (parsed.data.id) {
-    const data: {
-      name: string;
-      email: string;
-      role: "USER" | "MANAGER" | "ADMIN";
-      isActive?: boolean;
-      passwordHash?: string;
-    } = {
-      name: parsed.data.name,
-      email,
-      role: parsed.data.role,
-      isActive: parsed.data.isActive,
-    };
-    if (parsed.data.password) {
-      data.passwordHash = await hash(parsed.data.password, 12);
-    }
-    const item = await prisma.user.update({
-      where: { id: parsed.data.id },
-      data,
-    });
-    await writeAuditLog({
-      actorId: actor.id,
-      action: "user.update",
-      entityType: "User",
-      entityId: item.id,
-    });
-    revalidatePath("/admin/users");
-    return { ok: true as const, item };
+  if (parsed.data.id === actor.id && !parsed.data.isActive) {
+    return { ok: false as const, error: "Нельзя отключить свой аккаунт" };
   }
 
-  if (!parsed.data.password) {
-    return { ok: false as const, error: "Укажите пароль для нового пользователя" };
-  }
-  const passwordHash = await hash(parsed.data.password, 12);
-  const item = await prisma.user.create({
+  const item = await prisma.user.update({
+    where: { id: parsed.data.id },
     data: {
-      name: parsed.data.name,
-      email,
       role: parsed.data.role,
-      passwordHash,
-      isActive: parsed.data.isActive ?? true,
+      isActive: parsed.data.isActive,
     },
   });
   await writeAuditLog({
     actorId: actor.id,
-    action: "user.create",
+    action: "user.update",
     entityType: "User",
     entityId: item.id,
   });

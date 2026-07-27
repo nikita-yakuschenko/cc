@@ -113,20 +113,13 @@ export function QuickShorten() {
         {remaining === null
           ? "Без аккаунта — до 5 сокращений с вашего адреса."
           : quotaExhausted
-            ? "Лимит исчерпан. Зарегистрируйтесь для UTM, статистики и новых ссылок."
+            ? "Лимит исчерпан. Войдите через Bitrix24 для UTM, статистики и новых ссылок."
             : `Осталось: ${remaining} из ${limit}.`}{" "}
-        <Link
-          href="/register"
-          className="font-medium text-flow-green underline-offset-2 hover:underline"
-        >
-          Регистрация
-        </Link>
-        {" · "}
         <Link
           href="/login"
           className="font-medium text-flow-green underline-offset-2 hover:underline"
         >
-          Вход
+          Войти через Bitrix24
         </Link>
       </p>
     </div>

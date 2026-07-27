@@ -1,45 +1,35 @@
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
-import { z } from "zod";
-import { prisma } from "@/server/db";
 import { authConfig } from "@/server/auth/config";
-import { GUEST_USER_EMAIL } from "@/lib/constants";
-
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
+import { BitrixProvider, syncBitrixUser, type BitrixProfile } from "@/server/auth/bitrix";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(raw) {
-        const parsed = credentialsSchema.safeParse(raw);
-        if (!parsed.success) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email.toLowerCase() },
-        });
-        if (!user || !user.isActive) return null;
-        if (user.email === GUEST_USER_EMAIL) return null;
-
-        const valid = await compare(parsed.data.password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        };
-      },
-    }),
-  ],
+  providers: [BitrixProvider()],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ account, profile }) {
+      if (account?.provider !== "bitrix" || !profile) return false;
+      const user = await syncBitrixUser(profile as BitrixProfile);
+      return !!user;
+    },
+    async jwt({ token, account, profile }) {
+      if (account?.provider === "bitrix" && profile) {
+        const user = await syncBitrixUser(profile as BitrixProfile);
+        if (!user) {
+          throw new Error("Bitrix user sync failed");
+        }
+        token.id = user.id;
+        token.role = user.role;
+        return token;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.role = token.role;
+      }
+      return session;
+    },
+  },
 });

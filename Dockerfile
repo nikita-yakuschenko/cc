@@ -12,8 +12,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_PUBLIC_APP_URL=https://go.avgst.ru
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 # Placeholder for build-time prisma generate / next build
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
 ENV AUTH_SECRET="build-time-secret-placeholder"

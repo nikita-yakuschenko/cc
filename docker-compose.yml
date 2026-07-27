@@ -3,16 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-https://go.avgst.ru}"
     restart: unless-stopped
     environment:
-      NODE_ENV: production
-      HOSTNAME: 0.0.0.0
-      PORT: 3330
       DATABASE_URL: ${DATABASE_URL}
       APP_URL: ${APP_URL}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       AUTH_SECRET: ${AUTH_SECRET}
       IP_HASH_SALT: ${IP_HASH_SALT}
+      BITRIX_PORTAL_URL: ${BITRIX_PORTAL_URL}
+      BITRIX_CLIENT_ID: ${BITRIX_CLIENT_ID}
+      BITRIX_CLIENT_SECRET: ${BITRIX_CLIENT_SECRET}
+      BITRIX_ADMIN_EMAILS: ${BITRIX_ADMIN_EMAILS:-}
     expose:
       - "3330"
     healthcheck:

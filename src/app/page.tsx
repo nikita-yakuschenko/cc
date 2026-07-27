@@ -7,7 +7,7 @@ export default function HomePage() {
     <main className="relay-canvas relative min-h-screen overflow-hidden">
       <div className="home-hero-glow pointer-events-none absolute inset-x-0 top-0 h-80" />
       <div className="pointer-events-none absolute -right-24 top-24 opacity-[0.07]">
-        <RelayMark variant="mono-dark" className="h-[420px] w-[420px]" />
+        <RelayMark variant="mono-dark" className="h-105 w-105" />
       </div>
 
       <div className="relative mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
@@ -34,7 +34,7 @@ export default function HomePage() {
         </div>
 
         <p className="mt-12 max-w-md text-sm leading-relaxed text-muted">
-          UTM, QR-код, статистика и безлимит — после регистрации в панели Relay.
+          UTM, QR-код, статистика и безлимит — после входа через Bitrix24.
         </p>
       </div>
     </main>
