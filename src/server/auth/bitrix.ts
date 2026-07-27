@@ -153,42 +153,13 @@ export function BitrixProvider(): OAuthConfig<BitrixProfile> {
         };
       },
     },
-    userinfo: {
-      // Валидация Auth.js требует `userinfo`-endpoint config (минимум `url`).
-      // Тело `async request` остаётся кастомным под Bitrix REST (параметр `auth`).
-      url: `${portal}/rest/user.current.json`,
-      async request({
-        tokens,
-      }: {
-        tokens: {
-          access_token?: string;
-          client_endpoint?: string;
-        };
-      }) {
-        const endpoint =
-          tokens.client_endpoint || `${portalBase()}/rest/`;
-        const base = endpoint.endsWith("/") ? endpoint : `${endpoint}/`;
-        const res = await fetch(
-          `${base}user.current.json?auth=${encodeURIComponent(String(tokens.access_token))}`,
-        );
-        const data = (await res.json()) as {
-          result?: BitrixProfile;
-          error_description?: string;
-          error?: string;
-        };
-        if (!res.ok || !data.result) {
-          throw new Error(
-            data.error_description || data.error || "Bitrix user.current failed",
-          );
-        }
-        return data.result;
-      },
-    },
+    userinfo: `${portal}/rest/user.current.json`,
     profile(profile) {
+      const bitrixProfile = (profile as { result?: BitrixProfile }).result ?? profile;
       return {
-        id: String(profile.ID),
-        name: displayName(profile),
-        email: profileEmail(profile),
+        id: String(bitrixProfile.ID),
+        name: displayName(bitrixProfile),
+        email: profileEmail(bitrixProfile),
         // роль подставится в jwt после syncBitrixUser
         role: "USER",
       };
