@@ -6,14 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { updateUserAction } from "@/server/actions/links";
 import { GUEST_USER_EMAIL } from "@/lib/constants";
+import type { AppRole } from "@/server/auth/types";
 
 type UserRow = {
   id: string;
   name: string;
   email: string;
-  role: "USER" | "MANAGER" | "ADMIN";
+  role: AppRole;
   isActive: boolean;
   bitrixId: string | null;
+};
+
+const roleLabels: Record<AppRole, string> = {
+  USER: "Пользователь",
+  MANAGER: "Менеджер",
+  ADMIN: "Администратор",
+  SUPER_ADMIN: "Супер-админ",
 };
 
 export function UsersManager({ users }: { users: UserRow[] }) {
@@ -41,8 +49,8 @@ export function UsersManager({ users }: { users: UserRow[] }) {
       <div>
         <h2 className="text-2xl font-semibold">Пользователи</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Вход только через Bitrix24. Новые пользователи появляются после
-          первого входа. Здесь можно назначить роль или отключить доступ.
+          Вход только через Bitrix24. Здесь супер-админ назначает роли и
+          отключает доступ.
         </p>
       </div>
 
@@ -109,14 +117,14 @@ function UserRowEditor({
       <td className="px-4 py-3">
         <Select
           value={role}
-          onChange={(e) =>
-            setRole(e.target.value as "USER" | "MANAGER" | "ADMIN")
-          }
+          onChange={(e) => setRole(e.target.value as AppRole)}
           disabled={busy}
         >
-          <option value="USER">USER</option>
-          <option value="MANAGER">MANAGER</option>
-          <option value="ADMIN">ADMIN</option>
+          {(Object.keys(roleLabels) as AppRole[]).map((value) => (
+            <option key={value} value={value}>
+              {roleLabels[value]}
+            </option>
+          ))}
         </Select>
       </td>
       <td className="px-4 py-3">

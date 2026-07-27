@@ -47,14 +47,24 @@ export async function requireRole(roles: AppRole[]) {
   return session;
 }
 
-export function canManageAllLinks(role: AppRole) {
-  return role === "ADMIN" || role === "MANAGER";
+/** USER и MANAGER видят только свои ссылки и статистику */
+export function isOnlyOwnLinksRole(role: AppRole) {
+  return role === "USER" || role === "MANAGER";
 }
 
-export function canManageCatalogs(role: AppRole) {
-  return role === "ADMIN";
+/** ADMIN и SUPER_ADMIN видят все ссылки и статистику */
+export function canManageAllLinks(role: AppRole) {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
+export function canDeleteLinks(role: AppRole) {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
 export function canManageUsers(role: AppRole) {
-  return role === "ADMIN";
+  return role === "SUPER_ADMIN";
+}
+
+export function canManageSystem(role: AppRole) {
+  return role === "SUPER_ADMIN";
 }

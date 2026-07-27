@@ -1,10 +1,10 @@
-import { requireRole } from "@/server/auth/guards";
+import { requireSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db";
 import { CatalogManager } from "@/components/admin/catalog-manager";
 import { upsertCategoryAction } from "@/server/actions/links";
 
 export default async function CategoriesPage() {
-  await requireRole(["ADMIN"]);
+  await requireSession();
   const items = await prisma.linkCategory.findMany({
     orderBy: { sortOrder: "asc" },
   });
@@ -12,7 +12,7 @@ export default async function CategoriesPage() {
   return (
     <CatalogManager
       title="Категории"
-      description="Управляемый справочник тематик коротких ссылок"
+      description="Общий справочник тематик коротких ссылок"
       items={items}
       mode="category"
       action={upsertCategoryAction}

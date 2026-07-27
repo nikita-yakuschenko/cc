@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireSession, canManageAllLinks } from "@/server/auth/guards";
+import { requireSession, canManageAllLinks, canDeleteLinks } from "@/server/auth/guards";
 import { listShortLinks, backfillMissingLinkNames } from "@/server/links/service";
 import { prisma } from "@/server/db";
 import { Badge } from "@/components/ui/badge";
@@ -50,8 +50,7 @@ export default async function LinksPage({
   ]);
 
   const base = getPublicAppUrl();
-  const canDelete =
-    session.user.role === "ADMIN" || session.user.role === "MANAGER";
+  const canDelete = canDeleteLinks(session.user.role);
 
   function statusOf(link: (typeof result.items)[number]) {
     if (!link.isActive) return { label: "Отключена", className: "bg-slate-200" };

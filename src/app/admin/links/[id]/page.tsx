@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { requireSession } from "@/server/auth/guards";
+import { requireSession, isOnlyOwnLinksRole, canDeleteLinks } from "@/server/auth/guards";
 import { prisma } from "@/server/db";
 import { getLinkStats } from "@/server/analytics/service";
 import { LinkDetailClient } from "@/components/admin/link-detail-client";
@@ -23,7 +23,7 @@ export default async function LinkDetailPage({
   if (!link) notFound();
 
   if (
-    session.user.role === "USER" &&
+    isOnlyOwnLinksRole(session.user.role) &&
     link.createdById !== session.user.id
   ) {
     redirect("/admin/links");
@@ -35,9 +35,7 @@ export default async function LinkDetailPage({
     <LinkDetailClient
       link={link}
       stats={stats}
-      canDelete={
-        session.user.role === "ADMIN" || session.user.role === "MANAGER"
-      }
+      canDelete={canDeleteLinks(session.user.role)}
     />
   );
 }

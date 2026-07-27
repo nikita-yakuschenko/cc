@@ -3,7 +3,7 @@ import { getPublicAppUrl } from "@/lib/env-public";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function SettingsPage() {
-  const session = await requireRole(["ADMIN"]);
+  const session = await requireRole(["SUPER_ADMIN"]);
 
   return (
     <div className="space-y-6">
@@ -27,7 +27,11 @@ export default async function SettingsPage() {
           <p className="text-slate-500">
             Секреты, Bitrix OAuth и строка подключения к PostgreSQL задаются в
             Dokploy или локально в <code className="rounded bg-slate-100 px-1">.env</code>.
-            Через интерфейс приложения они не редактируются.
+            Супер-админ задаётся через{" "}
+            <code className="rounded bg-slate-100 px-1">
+              BITRIX_SUPER_ADMIN_EMAILS
+            </code>
+            .
           </p>
         </CardContent>
       </Card>

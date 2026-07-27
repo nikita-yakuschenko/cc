@@ -7,6 +7,7 @@ import {
   GUEST_USER_EMAIL,
 } from "@/lib/constants";
 import type { AppRole } from "@/server/auth/types";
+import { canDeleteLinks, isOnlyOwnLinksRole } from "@/server/auth/guards";
 import {
   buildPublicPath,
   buildShortUrl,
@@ -341,7 +342,7 @@ export async function updateShortLink(
     throw new Error("Ссылка не найдена");
   }
 
-  if (actor.role === "USER" && existing.createdById !== actor.id) {
+  if (isOnlyOwnLinksRole(actor.role) && existing.createdById !== actor.id) {
     throw new Error("Недостаточно прав");
   }
 
@@ -413,8 +414,8 @@ export async function softDeleteShortLink(
   if (!existing) {
     throw new Error("Ссылка не найдена");
   }
-  if (actor.role === "USER") {
-    throw new Error("Удаление доступно менеджеру или администратору");
+  if (!canDeleteLinks(actor.role)) {
+    throw new Error("Удаление доступно администратору");
   }
 
   await prisma.$transaction(async (tx) => {

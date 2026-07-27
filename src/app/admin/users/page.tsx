@@ -3,7 +3,7 @@ import { prisma } from "@/server/db";
 import { UsersManager } from "@/components/admin/users-manager";
 
 export default async function UsersPage() {
-  await requireRole(["ADMIN"]);
+  await requireRole(["SUPER_ADMIN"]);
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     select: {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { canManageAllLinks, getSessionUser } from "@/server/auth/guards";
+import { canManageUsers, getSessionUser } from "@/server/auth/guards";
 import {
   createShortLink,
   softDeleteShortLink,
@@ -144,9 +144,6 @@ const catalogItemSchema = z.object({
 
 export async function upsertCategoryAction(raw: unknown) {
   const user = await requireUser();
-  if (user.role !== "ADMIN") {
-    return { ok: false as const, error: "Недостаточно прав" };
-  }
   const parsed = catalogItemSchema.safeParse(raw);
   if (!parsed.success) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -180,9 +177,6 @@ export async function upsertCategoryAction(raw: unknown) {
 
 export async function upsertUtmSourceAction(raw: unknown) {
   const user = await requireUser();
-  if (user.role !== "ADMIN") {
-    return { ok: false as const, error: "Недостаточно прав" };
-  }
   const parsed = catalogItemSchema.safeParse(raw);
   if (!parsed.success || !parsed.data.value) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -210,9 +204,6 @@ export async function upsertUtmSourceAction(raw: unknown) {
 
 export async function upsertUtmMediumAction(raw: unknown) {
   const user = await requireUser();
-  if (user.role !== "ADMIN") {
-    return { ok: false as const, error: "Недостаточно прав" };
-  }
   const parsed = catalogItemSchema.safeParse(raw);
   if (!parsed.success || !parsed.data.value) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -247,10 +238,6 @@ const campaignSchema = z.object({
 
 export async function upsertCampaignAction(raw: unknown) {
   const user = await requireUser();
-  if (!canManageAllLinks(user.role) && user.role !== "USER") {
-    return { ok: false as const, error: "Недостаточно прав" };
-  }
-  // USER and above can create campaigns for themselves; managers/admins manage all
   const parsed = campaignSchema.safeParse(raw);
   if (!parsed.success) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -262,24 +249,14 @@ export async function upsertCampaignAction(raw: unknown) {
     description: parsed.data.description ?? null,
   };
 
-  let item;
-  if (parsed.data.id) {
-    const existing = await prisma.campaign.findUnique({
-      where: { id: parsed.data.id },
-    });
-    if (!existing) return { ok: false as const, error: "Кампания не найдена" };
-    if (user.role === "USER" && existing.createdById !== user.id) {
-      return { ok: false as const, error: "Недостаточно прав" };
-    }
-    item = await prisma.campaign.update({
-      where: { id: parsed.data.id },
-      data,
-    });
-  } else {
-    item = await prisma.campaign.create({
-      data: { ...data, createdById: user.id },
-    });
-  }
+  const item = parsed.data.id
+    ? await prisma.campaign.update({
+        where: { id: parsed.data.id },
+        data,
+      })
+    : await prisma.campaign.create({
+        data: { ...data, createdById: user.id },
+      });
 
   await writeAuditLog({
     actorId: user.id,
@@ -294,14 +271,14 @@ export async function upsertCampaignAction(raw: unknown) {
 
 const userUpdateSchema = z.object({
   id: z.string().min(1),
-  role: z.enum(["USER", "MANAGER", "ADMIN"]),
+  role: z.enum(["USER", "MANAGER", "ADMIN", "SUPER_ADMIN"]),
   isActive: z.boolean(),
 });
 
 /** Пользователи создаются только через вход Bitrix — здесь только роль и статус */
 export async function updateUserAction(raw: unknown) {
   const actor = await requireUser();
-  if (actor.role !== "ADMIN") {
+  if (!canManageUsers(actor.role)) {
     return { ok: false as const, error: "Недостаточно прав" };
   }
   const parsed = userUpdateSchema.safeParse(raw);
@@ -311,6 +288,10 @@ export async function updateUserAction(raw: unknown) {
 
   if (parsed.data.id === actor.id && !parsed.data.isActive) {
     return { ok: false as const, error: "Нельзя отключить свой аккаунт" };
+  }
+
+  if (parsed.data.id === actor.id && parsed.data.role !== "SUPER_ADMIN") {
+    return { ok: false as const, error: "Нельзя понизить свою роль" };
   }
 
   const item = await prisma.user.update({

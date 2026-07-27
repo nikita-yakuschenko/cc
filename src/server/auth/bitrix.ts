@@ -1,5 +1,5 @@
 import { prisma } from "@/server/db";
-import { getBitrixAdminEmails } from "@/lib/env";
+import { resolveRoleFromEmail, getBitrixSuperAdminEmails } from "@/lib/env";
 import { GUEST_USER_EMAIL } from "@/lib/constants";
 import type { AppRole } from "@/server/auth/types";
 
@@ -94,6 +94,8 @@ export async function syncBitrixUser(profile: BitrixProfile): Promise<{
 
   if (existing) {
     if (!existing.isActive) return null;
+    const superAdmins = getBitrixSuperAdminEmails();
+    const isSuperAdmin = superAdmins.has(email);
     return prisma.user.update({
       where: { id: existing.id },
       data: {
@@ -101,6 +103,7 @@ export async function syncBitrixUser(profile: BitrixProfile): Promise<{
         name,
         email,
         passwordHash: null,
+        ...(isSuperAdmin ? { role: "SUPER_ADMIN" as const } : {}),
       },
       select: {
         id: true,
@@ -111,8 +114,7 @@ export async function syncBitrixUser(profile: BitrixProfile): Promise<{
     });
   }
 
-  const admins = getBitrixAdminEmails();
-  const role = admins.has(email) ? "ADMIN" : "USER";
+  const role = resolveRoleFromEmail(email);
 
   return prisma.user.create({
     data: {

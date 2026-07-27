@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Role } from "@prisma/client";
 
 const coreEnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -13,6 +14,7 @@ const bitrixEnvSchema = z.object({
   BITRIX_CLIENT_ID: z.string().min(1),
   BITRIX_CLIENT_SECRET: z.string().min(1),
   BITRIX_ADMIN_EMAILS: z.string().default(""),
+  BITRIX_SUPER_ADMIN_EMAILS: z.string().default(""),
 });
 
 export type ServerEnv = z.infer<typeof coreEnvSchema> &
@@ -44,6 +46,7 @@ export function getBitrixEnv(): z.infer<typeof bitrixEnvSchema> {
     BITRIX_CLIENT_ID: process.env.BITRIX_CLIENT_ID,
     BITRIX_CLIENT_SECRET: process.env.BITRIX_CLIENT_SECRET,
     BITRIX_ADMIN_EMAILS: process.env.BITRIX_ADMIN_EMAILS,
+    BITRIX_SUPER_ADMIN_EMAILS: process.env.BITRIX_SUPER_ADMIN_EMAILS,
   });
   if (!parsed.success) {
     throw new Error(`Invalid Bitrix environment: ${parsed.error.message}`);
@@ -68,4 +71,21 @@ export function getBitrixAdminEmails(): Set<string> {
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean),
   );
+}
+
+export function getBitrixSuperAdminEmails(): Set<string> {
+  const raw = process.env.BITRIX_SUPER_ADMIN_EMAILS || "";
+  return new Set(
+    raw
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+export function resolveRoleFromEmail(email: string): Role {
+  const normalized = email.trim().toLowerCase();
+  if (getBitrixSuperAdminEmails().has(normalized)) return "SUPER_ADMIN";
+  if (getBitrixAdminEmails().has(normalized)) return "ADMIN";
+  return "USER";
 }

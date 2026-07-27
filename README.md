@@ -20,6 +20,7 @@
 | `BITRIX_CLIENT_ID` | код локального приложения |
 | `BITRIX_CLIENT_SECRET` | ключ локального приложения |
 | `BITRIX_ADMIN_EMAILS` | email админов через запятую |
+| `BITRIX_SUPER_ADMIN_EMAILS` | email супер-админов через запятую |
 
 `NODE_ENV`, `HOSTNAME`, `PORT` заданы в Dockerfile — дублировать не нужно.
 
@@ -47,8 +48,14 @@ docker compose exec app npx tsx prisma/seed.ts
 
 ## Роли
 
-- **USER** — свои ссылки
-- **MANAGER** — все ссылки, кампании, статистика
-- **ADMIN** — справочники, пользователи
+- **USER** — только свои ссылки и статистика; общие UTM-справочники и категории
+- **MANAGER** — как USER (только свои ссылки)
+- **ADMIN** — все ссылки и статистика; общие UTM-справочники и категории
+- **SUPER_ADMIN** — как ADMIN + разделы «Пользователи» и «Система»
 
-Первый вход через Bitrix создаёт пользователя. Роль ADMIN — по `BITRIX_ADMIN_EMAILS` или вручную в `/admin/users`.
+Первый вход через Bitrix создаёт пользователя. Роли назначаются так:
+- `BITRIX_SUPER_ADMIN_EMAILS` → SUPER_ADMIN
+- `BITRIX_ADMIN_EMAILS` → ADMIN
+- иначе → USER
+
+Супер-админ может менять роль любому пользователю в разделе «Пользователи».

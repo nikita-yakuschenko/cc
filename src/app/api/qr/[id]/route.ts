@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { prisma } from "@/server/db";
 import { getShortLinkUrl } from "@/server/links/service";
-import { canManageAllLinks, getSessionUser } from "@/server/auth/guards";
+import { getSessionUser, isOnlyOwnLinksRole } from "@/server/auth/guards";
 import { checkRateLimit } from "@/server/rate-limit";
 
 export async function GET(
@@ -30,9 +30,8 @@ export async function GET(
   }
 
   if (
-    user.role === "USER" &&
-    link.createdById !== user.id &&
-    !canManageAllLinks(user.role)
+    isOnlyOwnLinksRole(user.role) &&
+    link.createdById !== user.id
   ) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

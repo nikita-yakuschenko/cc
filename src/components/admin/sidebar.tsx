@@ -21,24 +21,19 @@ const nav = [
   { href: "/admin", label: "Создание ссылки", icon: Link2 },
   { href: "/admin/links", label: "Все ссылки", icon: Share2 },
   { href: "/admin/utm-settings", label: "Настройки UTM", icon: Tags },
-  {
-    href: "/admin/categories",
-    label: "Категории",
-    icon: FolderTree,
-    roles: ["ADMIN"] as AppRole[],
-  },
+  { href: "/admin/categories", label: "Категории", icon: FolderTree },
   { href: "/admin/stats", label: "Статистика", icon: BarChart3 },
   {
     href: "/admin/users",
     label: "Пользователи",
     icon: Users,
-    roles: ["ADMIN"] as AppRole[],
+    roles: ["SUPER_ADMIN"] as AppRole[],
   },
   {
     href: "/admin/settings",
     label: "Система",
     icon: Settings,
-    roles: ["ADMIN"] as AppRole[],
+    roles: ["SUPER_ADMIN"] as AppRole[],
   },
 ];
 
