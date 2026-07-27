@@ -120,7 +120,7 @@ export default async function LinksPage({
       </form>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[960px] text-left text-sm">
+        <table className="w-full min-w-240 text-left text-sm">
           <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Ссылка</th>
@@ -153,7 +153,7 @@ export default async function LinksPage({
                 }
                 return (
                   <tr key={link.id} className="border-b border-slate-50 hover:bg-slate-50/80">
-                    <td className="max-w-[280px] px-4 py-3">
+                    <td className="max-w-70 px-4 py-3">
                       <Link
                         href={`/admin/links/${link.id}`}
                         className="block truncate font-mono text-xs text-flow-green hover:underline"
@@ -162,16 +162,16 @@ export default async function LinksPage({
                         {base}/{link.publicPath}
                       </Link>
                     </td>
-                    <td className="max-w-[160px] truncate px-4 py-3">
+                    <td className="max-w-40 truncate px-4 py-3">
                       {link.name || "—"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
                       {link.category?.name || "—"}
                     </td>
-                    <td className="max-w-[180px] truncate px-4 py-3" title={domain}>
+                    <td className="max-w-45 truncate px-4 py-3" title={domain}>
                       {domain}
                     </td>
-                    <td className="max-w-[140px] truncate px-4 py-3">
+                    <td className="max-w-35 truncate px-4 py-3">
                       {link.utmCampaign || "—"}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
