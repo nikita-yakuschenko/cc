@@ -188,9 +188,6 @@ export function CreateLinkWizard({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-carbon">Создание ссылки</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Пошаговый сценарий: ссылка → UTM → короткий адрес → готово
-        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
