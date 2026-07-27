@@ -65,9 +65,6 @@ export default async function LinksPage({
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Все ссылки</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Найдено: {result.total}
-          </p>
         </div>
         <Link href="/">
           <Button>Создать</Button>
