@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { getPublicAppUrl } from "@/lib/env-public";
 import { LinkRowActions } from "@/components/admin/link-row-actions";
+import { LinkListCell } from "@/components/admin/link-list-cell";
 
 export default async function LinksPage({
   searchParams,
@@ -126,7 +127,6 @@ export default async function LinksPage({
           <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Ссылка</th>
-              <th className="px-4 py-3">Название</th>
               <th className="px-4 py-3">Категория</th>
               <th className="px-4 py-3">Домен</th>
               <th className="px-4 py-3">Кампания</th>
@@ -140,7 +140,7 @@ export default async function LinksPage({
           <tbody>
             {result.items.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={9} className="px-4 py-10 text-center text-slate-500">
                   Ссылки не найдены
                 </td>
               </tr>
@@ -155,17 +155,12 @@ export default async function LinksPage({
                 }
                 return (
                   <tr key={link.id} className="border-b border-slate-50 hover:bg-slate-50/80">
-                    <td className="max-w-70 px-4 py-3">
-                      <Link
-                        href={`/admin/links/${link.id}`}
-                        className="block truncate font-mono text-xs text-flow-green hover:underline"
-                        title={`${base}/${link.publicPath}`}
-                      >
-                        {base}/{link.publicPath}
-                      </Link>
-                    </td>
-                    <td className="max-w-40 truncate px-4 py-3">
-                      {link.name || "—"}
+                    <td className="max-w-80 px-4 py-3">
+                      <LinkListCell
+                        id={link.id}
+                        name={link.name}
+                        shortUrl={`${base}/${link.publicPath}`}
+                      />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
                       {link.category?.name || "—"}
