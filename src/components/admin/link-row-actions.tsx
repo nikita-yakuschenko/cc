@@ -19,7 +19,7 @@ export function LinkRowActions({
     <>
       <div className="flex items-center justify-end gap-1">
         <Link
-          href={`/admin/links/${id}#stats`}
+          href={`/links/${id}#stats`}
           className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-flow-green transition-colors hover:bg-slate-100"
         >
           <BarChart3 className="h-4 w-4 shrink-0" />

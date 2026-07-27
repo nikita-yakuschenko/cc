@@ -9,6 +9,13 @@ export const RESERVED_PATHS = [
   "stats",
   "settings",
   "register",
+  "links",
+  "categories",
+  "utm-settings",
+  "users",
+  "campaigns",
+  "sources",
+  "media",
 ] as const;
 
 export const SAFE_CODE_ALPHABET =

@@ -58,7 +58,7 @@ export async function createLinkAction(raw: unknown) {
       },
       user.id,
     );
-    revalidatePath("/admin/links");
+    revalidatePath("/links");
     return { ok: true as const, link };
   } catch (error) {
     return {
@@ -103,8 +103,8 @@ export async function updateLinkAction(raw: unknown) {
       },
       { id: user.id, role: user.role },
     );
-    revalidatePath("/admin/links");
-    revalidatePath(`/admin/links/${id}`);
+    revalidatePath("/links");
+    revalidatePath(`/links/${id}`);
     return { ok: true as const, link };
   } catch (error) {
     return {
@@ -118,7 +118,7 @@ export async function deleteLinkAction(id: string) {
   const user = await requireUser();
   try {
     await softDeleteShortLink(id, { id: user.id, role: user.role });
-    revalidatePath("/admin/links");
+    revalidatePath("/links");
     return { ok: true as const };
   } catch (error) {
     return {
@@ -171,7 +171,7 @@ export async function upsertCategoryAction(raw: unknown) {
     entityType: "LinkCategory",
     entityId: item.id,
   });
-  revalidatePath("/admin/categories");
+  revalidatePath("/categories");
   return { ok: true as const, item };
 }
 
@@ -197,8 +197,7 @@ export async function upsertUtmSourceAction(raw: unknown) {
     entityType: "UtmSource",
     entityId: item.id,
   });
-  revalidatePath("/admin/utm-settings");
-  revalidatePath("/admin/sources");
+  revalidatePath("/utm-settings");
   return { ok: true as const, item };
 }
 
@@ -224,8 +223,7 @@ export async function upsertUtmMediumAction(raw: unknown) {
     entityType: "UtmMedium",
     entityId: item.id,
   });
-  revalidatePath("/admin/utm-settings");
-  revalidatePath("/admin/media");
+  revalidatePath("/utm-settings");
   return { ok: true as const, item };
 }
 
@@ -264,14 +262,13 @@ export async function upsertCampaignAction(raw: unknown) {
     entityType: "Campaign",
     entityId: item.id,
   });
-  revalidatePath("/admin/utm-settings");
-  revalidatePath("/admin/campaigns");
+  revalidatePath("/utm-settings");
   return { ok: true as const, item };
 }
 
 const userUpdateSchema = z.object({
   id: z.string().min(1),
-  role: z.enum(["USER", "MANAGER", "ADMIN", "SUPER_ADMIN"]),
+  role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]),
   isActive: z.boolean(),
 });
 
@@ -307,6 +304,6 @@ export async function updateUserAction(raw: unknown) {
     entityType: "User",
     entityId: item.id,
   });
-  revalidatePath("/admin/users");
+  revalidatePath("/users");
   return { ok: true as const, item };
 }

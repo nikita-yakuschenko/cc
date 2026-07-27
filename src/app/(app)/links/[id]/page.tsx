@@ -26,7 +26,7 @@ export default async function LinkDetailPage({
     isOnlyOwnLinksRole(session.user.role) &&
     link.createdById !== session.user.id
   ) {
-    redirect("/admin/links");
+    redirect("/links");
   }
 
   const stats = await getLinkStats(link.id, { excludeBots: true, days: 30 });

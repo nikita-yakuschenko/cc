@@ -25,7 +25,7 @@ export default async function UtmSettingsPage({
   const activeTab = resolveTab(params.tab);
 
   if (params.tab && !tabs.includes(params.tab as UtmTab)) {
-    redirect(`/admin/utm-settings?tab=${activeTab}`);
+    redirect(`/utm-settings?tab=${activeTab}`);
   }
 
   const [campaigns, sources, channels] = await Promise.all([

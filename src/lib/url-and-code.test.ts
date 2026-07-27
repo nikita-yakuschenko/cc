@@ -32,6 +32,8 @@ describe("codes", () => {
 
   it("rejects reserved paths and invalid aliases", () => {
     expect(isReservedPath("admin")).toBe(true);
+    expect(isReservedPath("links")).toBe(true);
+    expect(isReservedPath("utm-settings")).toBe(true);
     expect(isValidCustomAlias("admin")).toBe(false);
     expect(isValidCustomAlias("ab")).toBe(false);
     expect(isValidCustomAlias("modul-120")).toBe(true);

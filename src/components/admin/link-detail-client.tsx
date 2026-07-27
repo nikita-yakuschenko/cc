@@ -133,7 +133,7 @@ export function LinkDetailClient({
           linkId={link.id}
           open={deleteOpen}
           onOpenChange={setDeleteOpen}
-          redirectTo="/admin/links"
+          redirectTo="/links"
         />
       ) : null}
 

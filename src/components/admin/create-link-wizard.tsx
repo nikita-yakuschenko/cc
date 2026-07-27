@@ -537,7 +537,7 @@ export function CreateLinkWizard({
                   Скачать QR-код
                 </Button>
               </a>
-              <a href={`/admin/links/${created.id}`}>
+              <a href={`/links/${created.id}`}>
                 <Button variant="ghost" type="button">
                   Статистика
                 </Button>

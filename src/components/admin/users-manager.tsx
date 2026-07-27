@@ -19,7 +19,6 @@ type UserRow = {
 
 const roleLabels: Record<AppRole, string> = {
   USER: "Пользователь",
-  MANAGER: "Менеджер",
   ADMIN: "Администратор",
   SUPER_ADMIN: "Супер-админ",
 };

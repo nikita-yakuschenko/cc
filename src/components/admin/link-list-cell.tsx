@@ -21,7 +21,7 @@ export function LinkListCell({
   return (
     <div className="min-w-0 space-y-1">
       <Link
-        href={`/admin/links/${id}`}
+        href={`/links/${id}`}
         className="block truncate font-medium text-carbon hover:text-flow-green"
         title={name || undefined}
       >
@@ -29,7 +29,7 @@ export function LinkListCell({
       </Link>
       <div className="flex min-w-0 items-center gap-1">
         <Link
-          href={`/admin/links/${id}`}
+          href={`/links/${id}`}
           className="min-w-0 truncate font-mono text-xs text-flow-green hover:underline"
           title={shortUrl}
         >

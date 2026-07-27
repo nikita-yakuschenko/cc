@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/login?error=inactive", request.url));
     }
 
-    const response = NextResponse.redirect(new URL("/admin", getPublicAppUrl()));
+    const response = NextResponse.redirect(new URL("/", getPublicAppUrl()));
     response.cookies.set(SESSION_COOKIE, makeSessionToken(user.id), {
       httpOnly: true,
       secure: true,

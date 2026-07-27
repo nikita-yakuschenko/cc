@@ -35,7 +35,7 @@ export function UtmSettingsClient({
   const router = useRouter();
 
   function onTabChange(value: string) {
-    router.push(`/admin/utm-settings?tab=${value}`);
+    router.push(`/utm-settings?tab=${value}`);
   }
 
   return (

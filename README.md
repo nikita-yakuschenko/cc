@@ -32,7 +32,7 @@ docker compose exec app npx tsx prisma/seed.ts
 
 6. Проверка:
    - `GET /api/health` → `{ "status": "ok" }`
-   - `/login` → Bitrix24 → `/admin`
+   - `/login` → Bitrix24 → `/`
 
 Миграции применяются автоматически при старте контейнера (`docker-entrypoint.sh`).
 
@@ -49,7 +49,6 @@ docker compose exec app npx tsx prisma/seed.ts
 ## Роли
 
 - **USER** — только свои ссылки и статистика; общие UTM-справочники и категории
-- **MANAGER** — как USER (только свои ссылки)
 - **ADMIN** — все ссылки и статистика; общие UTM-справочники и категории
 - **SUPER_ADMIN** — как ADMIN + разделы «Пользователи» и «Система»
 

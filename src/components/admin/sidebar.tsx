@@ -18,19 +18,19 @@ import { cn } from "@/lib/utils";
 import { RelayWordmark } from "@/components/brand/relay-mark";
 
 const nav = [
-  { href: "/admin", label: "Создание ссылки", icon: Link2 },
-  { href: "/admin/links", label: "Все ссылки", icon: Share2 },
-  { href: "/admin/utm-settings", label: "Настройки UTM", icon: Tags },
-  { href: "/admin/categories", label: "Категории", icon: FolderTree },
-  { href: "/admin/stats", label: "Статистика", icon: BarChart3 },
+  { href: "/", label: "Создание ссылки", icon: Link2 },
+  { href: "/links", label: "Все ссылки", icon: Share2 },
+  { href: "/utm-settings", label: "Настройки UTM", icon: Tags },
+  { href: "/categories", label: "Категории", icon: FolderTree },
+  { href: "/stats", label: "Статистика", icon: BarChart3 },
   {
-    href: "/admin/users",
+    href: "/users",
     label: "Пользователи",
     icon: Users,
     roles: ["SUPER_ADMIN"] as AppRole[],
   },
   {
-    href: "/admin/settings",
+    href: "/settings",
     label: "Система",
     icon: Settings,
     roles: ["SUPER_ADMIN"] as AppRole[],
@@ -59,13 +59,10 @@ export function AdminSidebar({
           .filter((item) => !item.roles || item.roles.includes(user.role))
           .map((item) => {
             const active =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : item.href === "/admin/utm-settings"
-                  ? pathname.startsWith("/admin/utm-settings") ||
-                    pathname.startsWith("/admin/campaigns") ||
-                    pathname.startsWith("/admin/sources") ||
-                    pathname.startsWith("/admin/media")
+              item.href === "/"
+                ? pathname === "/"
+                : item.href === "/utm-settings"
+                  ? pathname.startsWith("/utm-settings")
                   : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (

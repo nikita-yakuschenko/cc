@@ -69,7 +69,7 @@ export default async function LinksPage({
             Найдено: {result.total}
           </p>
         </div>
-        <Link href="/admin">
+        <Link href="/">
           <Button>Создать</Button>
         </Link>
       </div>
@@ -198,7 +198,7 @@ export default async function LinksPage({
           {Array.from({ length: result.pageCount }, (_, i) => i + 1).map((p) => (
             <Link
               key={p}
-              href={`/admin/links?${new URLSearchParams({
+              href={`/links?${new URLSearchParams({
                 ...Object.fromEntries(
                   Object.entries(params).filter(([, v]) => v),
                 ) as Record<string, string>,

@@ -42,14 +42,14 @@ export async function requireSession(): Promise<{ user: SessionUser }> {
 export async function requireRole(roles: AppRole[]) {
   const session = await requireSession();
   if (!roles.includes(session.user.role)) {
-    redirect("/admin");
+    redirect("/");
   }
   return session;
 }
 
-/** USER и MANAGER видят только свои ссылки и статистику */
+/** USER видит только свои ссылки и статистику */
 export function isOnlyOwnLinksRole(role: AppRole) {
-  return role === "USER" || role === "MANAGER";
+  return role === "USER";
 }
 
 /** ADMIN и SUPER_ADMIN видят все ссылки и статистику */
