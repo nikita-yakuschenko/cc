@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireSession } from "@/server/auth/guards";
+import { requireSession, canManageUtmCatalog } from "@/server/auth/guards";
 import { prisma } from "@/server/db";
 import {
   UtmSettingsClient,
@@ -20,7 +20,7 @@ export default async function UtmSettingsPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  await requireSession();
+  const { user } = await requireSession();
   const params = await searchParams;
   const activeTab = resolveTab(params.tab);
 
@@ -37,6 +37,7 @@ export default async function UtmSettingsPage({
   return (
     <UtmSettingsClient
       activeTab={activeTab}
+      canManageCatalog={canManageUtmCatalog(user.role)}
       campaigns={campaigns.map((item) => ({
         ...item,
         isActive: true,

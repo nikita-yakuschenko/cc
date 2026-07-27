@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { CatalogManager } from "@/components/admin/catalog-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  deleteCampaignAction,
+  deleteUtmMediumAction,
+  deleteUtmSourceAction,
   upsertCampaignAction,
   upsertUtmMediumAction,
   upsertUtmSourceAction,
@@ -26,11 +29,13 @@ export function UtmSettingsClient({
   campaigns,
   sources,
   channels,
+  canManageCatalog,
 }: {
   activeTab: UtmTab;
   campaigns: CatalogItem[];
   sources: CatalogItem[];
   channels: CatalogItem[];
+  canManageCatalog: boolean;
 }) {
   const router = useRouter();
 
@@ -62,6 +67,7 @@ export function UtmSettingsClient({
             items={campaigns}
             mode="campaign"
             action={upsertCampaignAction}
+            deleteAction={deleteCampaignAction}
             hideHeader
           />
         </TabsContent>
@@ -73,6 +79,8 @@ export function UtmSettingsClient({
             items={sources}
             mode="source"
             action={upsertUtmSourceAction}
+            deleteAction={deleteUtmSourceAction}
+            canManage={canManageCatalog}
             hideHeader
           />
         </TabsContent>
@@ -84,6 +92,8 @@ export function UtmSettingsClient({
             items={channels}
             mode="medium"
             action={upsertUtmMediumAction}
+            deleteAction={deleteUtmMediumAction}
+            canManage={canManageCatalog}
             hideHeader
           />
         </TabsContent>

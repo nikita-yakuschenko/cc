@@ -1,7 +1,7 @@
 import { requireSession } from "@/server/auth/guards";
 import { prisma } from "@/server/db";
 import { CatalogManager } from "@/components/admin/catalog-manager";
-import { upsertCategoryAction } from "@/server/actions/links";
+import { upsertCategoryAction, deleteCategoryAction } from "@/server/actions/links";
 
 export default async function CategoriesPage() {
   await requireSession();
@@ -16,6 +16,7 @@ export default async function CategoriesPage() {
       items={items}
       mode="category"
       action={upsertCategoryAction}
+      deleteAction={deleteCategoryAction}
     />
   );
 }

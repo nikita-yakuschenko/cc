@@ -68,3 +68,8 @@ export function canManageUsers(role: AppRole) {
 export function canManageSystem(role: AppRole) {
   return role === "SUPER_ADMIN";
 }
+
+/** Источники и каналы UTM — только ADMIN и SUPER_ADMIN */
+export function canManageUtmCatalog(role: AppRole) {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
+}

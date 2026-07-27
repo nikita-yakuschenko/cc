@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { canManageUsers, getSessionUser } from "@/server/auth/guards";
+import { canManageUsers, canManageUtmCatalog, getSessionUser } from "@/server/auth/guards";
 import {
   createShortLink,
   softDeleteShortLink,
@@ -177,6 +177,9 @@ export async function upsertCategoryAction(raw: unknown) {
 
 export async function upsertUtmSourceAction(raw: unknown) {
   const user = await requireUser();
+  if (!canManageUtmCatalog(user.role)) {
+    return { ok: false as const, error: "Недостаточно прав" };
+  }
   const parsed = catalogItemSchema.safeParse(raw);
   if (!parsed.success || !parsed.data.value) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -203,6 +206,9 @@ export async function upsertUtmSourceAction(raw: unknown) {
 
 export async function upsertUtmMediumAction(raw: unknown) {
   const user = await requireUser();
+  if (!canManageUtmCatalog(user.role)) {
+    return { ok: false as const, error: "Недостаточно прав" };
+  }
   const parsed = catalogItemSchema.safeParse(raw);
   if (!parsed.success || !parsed.data.value) {
     return { ok: false as const, error: "Некорректные данные" };
@@ -264,6 +270,108 @@ export async function upsertCampaignAction(raw: unknown) {
   });
   revalidatePath("/utm-settings");
   return { ok: true as const, item };
+}
+
+export async function deleteUtmSourceAction(id: string) {
+  const user = await requireUser();
+  if (!canManageUtmCatalog(user.role)) {
+    return { ok: false as const, error: "Недостаточно прав" };
+  }
+  if (!id) {
+    return { ok: false as const, error: "Не указан элемент" };
+  }
+
+  try {
+    await prisma.utmSource.delete({ where: { id } });
+    await writeAuditLog({
+      actorId: user.id,
+      action: "utm_source.delete",
+      entityType: "UtmSource",
+      entityId: id,
+    });
+    revalidatePath("/utm-settings");
+    revalidatePath("/");
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось удалить источник" };
+  }
+}
+
+export async function deleteUtmMediumAction(id: string) {
+  const user = await requireUser();
+  if (!canManageUtmCatalog(user.role)) {
+    return { ok: false as const, error: "Недостаточно прав" };
+  }
+  if (!id) {
+    return { ok: false as const, error: "Не указан элемент" };
+  }
+
+  try {
+    await prisma.utmMedium.delete({ where: { id } });
+    await writeAuditLog({
+      actorId: user.id,
+      action: "utm_medium.delete",
+      entityType: "UtmMedium",
+      entityId: id,
+    });
+    revalidatePath("/utm-settings");
+    revalidatePath("/");
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось удалить канал" };
+  }
+}
+
+export async function deleteCampaignAction(id: string) {
+  const user = await requireUser();
+  if (!id) {
+    return { ok: false as const, error: "Не указан элемент" };
+  }
+
+  try {
+    await prisma.campaign.delete({ where: { id } });
+    await writeAuditLog({
+      actorId: user.id,
+      action: "campaign.delete",
+      entityType: "Campaign",
+      entityId: id,
+    });
+    revalidatePath("/utm-settings");
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось удалить кампанию" };
+  }
+}
+
+export async function deleteCategoryAction(id: string) {
+  const user = await requireUser();
+  if (!id) {
+    return { ok: false as const, error: "Не указан элемент" };
+  }
+
+  const linksCount = await prisma.shortLink.count({
+    where: { categoryId: id, deletedAt: null },
+  });
+  if (linksCount > 0) {
+    return {
+      ok: false as const,
+      error: `Категория используется в ${linksCount} ссылках`,
+    };
+  }
+
+  try {
+    await prisma.linkCategory.delete({ where: { id } });
+    await writeAuditLog({
+      actorId: user.id,
+      action: "category.delete",
+      entityType: "LinkCategory",
+      entityId: id,
+    });
+    revalidatePath("/categories");
+    return { ok: true as const };
+  } catch {
+    return { ok: false as const, error: "Не удалось удалить категорию" };
+  }
 }
 
 const userUpdateSchema = z.object({
