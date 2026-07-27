@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description: "Управляемые цифровые переходы. Ссылки, UTM и аналитика.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

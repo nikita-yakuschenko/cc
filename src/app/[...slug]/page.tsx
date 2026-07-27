@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/server/rate-limit";
 import { isReservedPath } from "@/lib/code";
 import { prisma } from "@/server/db";
 import { RelayMark } from "@/components/brand/relay-mark";
+import { APP_NAME } from "@/lib/constants";
 
 type Props = {
   params: Promise<{ slug: string[] }>;
@@ -91,9 +92,9 @@ export default async function PublicRedirectPage({ params }: Props) {
 
   return (
     <main className="relay-canvas mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 py-24 text-center">
-      <RelayMark variant="mono-dark" className="h-10 w-10" />
+      <RelayMark className="h-10 w-10" />
       <p className="mt-4 text-xs tracking-[0.18em] text-muted uppercase">
-        Relay · go.avgst.ru
+        {APP_NAME} · go.avgst.ru
       </p>
       <h1 className="mt-3 text-2xl font-medium text-carbon">{msg.title}</h1>
       <p className="mt-2 text-muted">{msg.text}</p>

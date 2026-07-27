@@ -20,7 +20,7 @@ export const CODE_LENGTH_WITHOUT_CATEGORY = 7;
 export const CUSTOM_ALIAS_MIN = 3;
 export const CUSTOM_ALIAS_MAX = 64;
 
-export const APP_NAME = "Relay";
+export const APP_NAME = "Сокращатель ссылок";
 
 export const GUEST_USER_EMAIL = "guest@system.go.avgst.ru";
 export const ANONYMOUS_LINK_LIMIT_PER_IP = 5;

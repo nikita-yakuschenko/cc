@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/server/auth";
-import { canManageAllLinks } from "@/server/auth/guards";
+import { canManageAllLinks, getSessionUser } from "@/server/auth/guards";
 import {
   createShortLink,
   softDeleteShortLink,
@@ -16,11 +15,11 @@ import { normalizeUtmValue } from "@/server/links/code";
 import { isReservedPath } from "@/server/links/code";
 
 async function requireUser() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getSessionUser();
+  if (!user?.id) {
     throw new Error("Требуется авторизация");
   }
-  return session.user;
+  return user;
 }
 
 const createLinkSchema = z.object({

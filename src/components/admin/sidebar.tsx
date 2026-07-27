@@ -13,9 +13,8 @@ import {
   Share2,
   Users,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import type { Role } from "@prisma/client";
-import type { AppRole } from "@/server/auth/config";
+import type { AppRole } from "@/server/auth/types";
 import { cn } from "@/lib/utils";
 import { RelayWordmark } from "@/components/brand/relay-mark";
 
@@ -58,6 +57,11 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
 
+  async function onLogout() {
+    await fetch("/api/bitrix/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
+
   return (
     <aside className="flex w-64 shrink-0 flex-col bg-deep-current text-white">
       <div className="border-b border-white/10 px-5 py-5">
@@ -95,7 +99,7 @@ export function AdminSidebar({
         <p className="mt-1 text-xs text-mist/70">{user.role}</p>
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={onLogout}
           className="mt-3 inline-flex items-center gap-2 text-sm text-mist transition-colors hover:text-white"
         >
           <LogOut className="h-4 w-4" strokeWidth={1.75} />

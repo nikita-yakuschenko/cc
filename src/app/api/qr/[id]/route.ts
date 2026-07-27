@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
-import { auth } from "@/server/auth";
 import { prisma } from "@/server/db";
 import { getShortLinkUrl } from "@/server/links/service";
-import { canManageAllLinks } from "@/server/auth/guards";
+import { canManageAllLinks, getSessionUser } from "@/server/auth/guards";
 import { checkRateLimit } from "@/server/rate-limit";
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getSessionUser();
+  if (!user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const limited = checkRateLimit(`qr:${session.user.id}`, 60, 60_000);
+  const limited = checkRateLimit(`qr:${user.id}`, 60, 60_000);
   if (!limited.ok) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
@@ -31,9 +30,9 @@ export async function GET(
   }
 
   if (
-    session.user.role === "USER" &&
-    link.createdById !== session.user.id &&
-    !canManageAllLinks(session.user.role)
+    user.role === "USER" &&
+    link.createdById !== user.id &&
+    !canManageAllLinks(user.role)
   ) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

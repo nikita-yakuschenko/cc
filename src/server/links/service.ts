@@ -6,7 +6,7 @@ import {
   ANONYMOUS_LINK_LIMIT_PER_IP,
   GUEST_USER_EMAIL,
 } from "@/lib/constants";
-import type { AppRole } from "@/server/auth/config";
+import type { AppRole } from "@/server/auth/types";
 import {
   buildPublicPath,
   buildShortUrl,

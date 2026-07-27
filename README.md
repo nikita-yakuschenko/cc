@@ -1,4 +1,4 @@
-# Relay — go.avgst.ru
+# Сокращатель ссылок — go.avgst.ru
 
 Короткие ссылки, UTM и аналитика. Вход только через Bitrix24.
 
@@ -41,7 +41,7 @@ docker compose exec app npx tsx prisma/seed.ts
 
 | Поле | URL |
 |---|---|
-| Обработчик | `https://go.avgst.ru/api/auth/callback/bitrix` |
+| Обработчик | `https://go.avgst.ru/api/bitrix/callback` |
 | Установка | `https://go.avgst.ru/api/bitrix/install` |
 | Права | `user`, `user_brief`, `user_basic` |
 

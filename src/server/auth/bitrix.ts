@@ -1,7 +1,7 @@
-import type { OAuthConfig } from "next-auth/providers";
 import { prisma } from "@/server/db";
 import { getBitrixAdminEmails } from "@/lib/env";
 import { GUEST_USER_EMAIL } from "@/lib/constants";
+import type { AppRole } from "@/server/auth/types";
 
 export type BitrixProfile = {
   ID: string | number;
@@ -11,7 +11,7 @@ export type BitrixProfile = {
   ACTIVE?: boolean | string;
 };
 
-type BitrixTokenResponse = {
+export type BitrixTokenResponse = {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
@@ -21,24 +21,28 @@ type BitrixTokenResponse = {
   error_description?: string;
 };
 
-function portalBase(): string {
-  const url = process.env.BITRIX_PORTAL_URL?.trim();
-  if (!url) {
+export function getBitrixPortalBase(): string {
+  const portal = process.env.BITRIX_PORTAL_URL?.trim();
+  if (!portal) {
     throw new Error("BITRIX_PORTAL_URL is not configured");
   }
-  return url.replace(/\/$/, "");
+  return portal.replace(/\/$/, "");
 }
 
-function bitrixClientId(): string {
-  const id = process.env.BITRIX_CLIENT_ID?.trim();
-  if (!id) throw new Error("BITRIX_CLIENT_ID is not configured");
-  return id;
+export function getBitrixClientId(): string {
+  const clientId = process.env.BITRIX_CLIENT_ID?.trim();
+  if (!clientId) {
+    throw new Error("BITRIX_CLIENT_ID is not configured");
+  }
+  return clientId;
 }
 
-function bitrixClientSecret(): string {
-  const secret = process.env.BITRIX_CLIENT_SECRET?.trim();
-  if (!secret) throw new Error("BITRIX_CLIENT_SECRET is not configured");
-  return secret;
+export function getBitrixClientSecret(): string {
+  const clientSecret = process.env.BITRIX_CLIENT_SECRET?.trim();
+  if (!clientSecret) {
+    throw new Error("BITRIX_CLIENT_SECRET is not configured");
+  }
+  return clientSecret;
 }
 
 function isBitrixActive(profile: BitrixProfile): boolean {
@@ -48,7 +52,7 @@ function isBitrixActive(profile: BitrixProfile): boolean {
 
 function displayName(profile: BitrixProfile): string {
   const name = [profile.NAME, profile.LAST_NAME]
-    .map((p) => (p || "").trim())
+    .map((part) => (part || "").trim())
     .filter(Boolean)
     .join(" ");
   return name || `Bitrix #${profile.ID}`;
@@ -60,8 +64,23 @@ function profileEmail(profile: BitrixProfile): string {
   return `bitrix-${profile.ID}@users.bitrix.local`;
 }
 
-/** Синхронизация пользователя Bitrix → локальная таблица User */
-export async function syncBitrixUser(profile: BitrixProfile) {
+export function getProfileDisplay(profile: BitrixProfile): {
+  name: string;
+  email: string;
+} {
+  return {
+    name: displayName(profile),
+    email: profileEmail(profile),
+  };
+}
+
+/** Пользователь Bitrix синхронизируется в локальную таблицу User при входе. */
+export async function syncBitrixUser(profile: BitrixProfile): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  role: AppRole;
+} | null> {
   if (!isBitrixActive(profile)) return null;
 
   const bitrixId = String(profile.ID);
@@ -83,6 +102,12 @@ export async function syncBitrixUser(profile: BitrixProfile) {
         email,
         passwordHash: null,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
     });
   }
 
@@ -98,73 +123,65 @@ export async function syncBitrixUser(profile: BitrixProfile) {
       passwordHash: null,
       isActive: true,
     },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
   });
 }
 
-export function BitrixProvider(): OAuthConfig<BitrixProfile> {
-  // Build-time placeholders — реальные значения читаются в runtime-хендлерах
-  const portal =
-    process.env.BITRIX_PORTAL_URL?.replace(/\/$/, "") ||
-    "https://build.invalid";
-  const clientId = process.env.BITRIX_CLIENT_ID || "build-client-id";
-  const clientSecret = process.env.BITRIX_CLIENT_SECRET || "build-client-secret";
+export async function exchangeBitrixCode(
+  code: string,
+  redirectUri?: string,
+): Promise<BitrixTokenResponse> {
+  const url = new URL("https://oauth.bitrix24.tech/oauth/token/");
+  url.searchParams.set("grant_type", "authorization_code");
+  url.searchParams.set("client_id", getBitrixClientId());
+  url.searchParams.set("client_secret", getBitrixClientSecret());
+  url.searchParams.set("code", code);
+  if (redirectUri) {
+    url.searchParams.set("redirect_uri", redirectUri);
+  }
 
-  return {
-    id: "bitrix",
-    name: "Bitrix24",
-    type: "oauth",
-    clientId,
-    clientSecret,
-    authorization: {
-      url: `${portal}/oauth/authorize/`,
-      params: { response_type: "code" },
-    },
-    token: {
-      url: "https://oauth.bitrix24.tech/oauth/token/",
-      async request({
-        provider,
-        params,
-      }: {
-        provider: { clientId?: string; clientSecret?: string };
-        params: { code?: string };
-      }) {
-        const url = new URL("https://oauth.bitrix24.tech/oauth/token/");
-        url.searchParams.set("grant_type", "authorization_code");
-        url.searchParams.set("client_id", bitrixClientId());
-        url.searchParams.set("client_secret", bitrixClientSecret());
-        url.searchParams.set("code", String(params.code));
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    cache: "no-store",
+  });
+  const payload = (await response.json()) as BitrixTokenResponse;
+  if (!response.ok || !payload.access_token) {
+    throw new Error(
+      payload.error_description || payload.error || "Bitrix token exchange failed",
+    );
+  }
+  return payload;
+}
 
-        const res = await fetch(url.toString(), { method: "GET" });
-        const data = (await res.json()) as BitrixTokenResponse;
-        if (!res.ok || !data.access_token) {
-          throw new Error(
-            data.error_description || data.error || "Bitrix token exchange failed",
-          );
-        }
+export async function fetchBitrixProfile(
+  accessToken: string,
+  clientEndpoint?: string,
+): Promise<BitrixProfile> {
+  const endpoint = (clientEndpoint || `${getBitrixPortalBase()}/rest`).replace(/\/$/, "");
 
-        return {
-          tokens: {
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-            expires_in: data.expires_in,
-            // client_endpoint нужен для user.current
-            client_endpoint: data.client_endpoint,
-          },
-        };
-      },
+  const response = await fetch(`${endpoint}/user.current`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    userinfo: `${portal}/rest/user.current.json`,
-    profile(profile) {
-      const bitrixProfile = (profile as { result?: BitrixProfile }).result ?? profile;
-      return {
-        id: String(bitrixProfile.ID),
-        name: displayName(bitrixProfile),
-        email: profileEmail(bitrixProfile),
-        // роль подставится в jwt после syncBitrixUser
-        role: "USER",
-      };
-    },
-    checks: ["state"],
-    style: { brandColor: "#2fc6f6" },
+    body: new URLSearchParams({ auth: accessToken }),
+    cache: "no-store",
+  });
+
+  const payload = (await response.json()) as {
+    result?: BitrixProfile;
+    error?: string;
+    error_description?: string;
   };
+  if (!response.ok || !payload.result) {
+    throw new Error(
+      payload.error_description || payload.error || "Bitrix user.current failed",
+    );
+  }
+  return payload.result;
 }
