@@ -27,7 +27,7 @@ export function StatsCharts({
       <div>
         <h2 className="text-2xl font-semibold">Статистика</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Сводка за 30 дней (боты исключены)
+          Сводка за 30 дней
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
