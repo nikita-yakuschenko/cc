@@ -154,6 +154,9 @@ export function BitrixProvider(): OAuthConfig<BitrixProfile> {
       },
     },
     userinfo: {
+      // Валидация Auth.js требует `userinfo`-endpoint config (минимум `url`).
+      // Тело `async request` остаётся кастомным под Bitrix REST (параметр `auth`).
+      url: `${portal}/rest/user.current.json`,
       async request({
         tokens,
       }: {
