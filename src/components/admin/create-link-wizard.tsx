@@ -215,21 +215,12 @@ export function CreateLinkWizard({
             hint: "Ссылка создана",
             Icon: CheckCircle2,
           },
-        ].map((s, index, list) => {
+        ].map((s) => {
           const done = step > s.n;
           const active = step === s.n;
           const Icon = s.Icon;
           return (
             <li key={s.n} className="relative">
-              {index < list.length - 1 ? (
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute top-7 right-0 hidden h-0.5 w-[calc(50%+0.375rem)] translate-x-1/2 sm:block",
-                    done ? "bg-flow-green" : "bg-border",
-                  )}
-                />
-              ) : null}
               <div
                 className={cn(
                   "relative flex items-start gap-3 rounded-2xl border px-4 py-4 transition-colors",
