@@ -394,7 +394,7 @@ export function CreateLinkWizard({
                   </Select>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>Кампания (utm_campaign) *</Label>
+                  <Label>Кампания (utm_campaign)</Label>
                   <Input
                     value={utmCampaign}
                     onChange={(e) => setUtmCampaign(e.target.value)}
@@ -442,11 +442,8 @@ export function CreateLinkWizard({
                     toast.error("Выберите сценарий");
                     return;
                   }
-                  if (
-                    showUtmFields &&
-                    (!utmSource || !utmMedium || !utmCampaign)
-                  ) {
-                    toast.error("Заполните обязательные UTM-поля");
+                  if (showUtmFields && (!utmSource || !utmMedium)) {
+                    toast.error("Заполните источник и канал UTM");
                     return;
                   }
                   setStep(3);

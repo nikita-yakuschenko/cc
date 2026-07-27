@@ -109,9 +109,9 @@ export async function createShortLink(
   const utmTerm = normalizeOptionalUtm(input.utmTerm);
 
   if (input.utmMode === "replace") {
-    if (!utmSource || !utmMedium || !utmCampaign) {
+    if (!utmSource || !utmMedium) {
       throw new Error(
-        "Для UTM-разметки обязательны source, medium и campaign",
+        "Для UTM-разметки обязательны source и medium",
       );
     }
   }
