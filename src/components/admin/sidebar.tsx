@@ -47,7 +47,12 @@ const nav = [
     icon: Users,
     roles: ["ADMIN"] as AppRole[],
   },
-  { href: "/admin/settings", label: "Настройки", icon: Settings },
+  {
+    href: "/admin/settings",
+    label: "Система",
+    icon: Settings,
+    roles: ["ADMIN"] as AppRole[],
+  },
 ];
 
 export function AdminSidebar({
