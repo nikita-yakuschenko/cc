@@ -85,7 +85,6 @@ export function AdminSidebar({
       <div className="border-t border-white/10 p-4">
         <p className="truncate text-sm font-medium text-white">{user.name}</p>
         <p className="truncate text-xs text-mist">{user.email}</p>
-        <p className="mt-1 text-xs text-mist/70">{user.role}</p>
         <button
           type="button"
           onClick={onLogout}
