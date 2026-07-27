@@ -19,6 +19,9 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 # Placeholder for build-time prisma generate / next build
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public"
 ENV AUTH_SECRET="build-time-secret-placeholder"
+ENV BITRIX_PORTAL_URL="https://build.invalid"
+ENV BITRIX_CLIENT_ID="build-client-id"
+ENV BITRIX_CLIENT_SECRET="build-client-secret"
 RUN npx prisma generate
 RUN npm run build
 

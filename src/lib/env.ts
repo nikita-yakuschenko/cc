@@ -61,8 +61,7 @@ export function getPublicAppUrl(): string {
 }
 
 export function getBitrixAdminEmails(): Set<string> {
-  const raw =
-    process.env.BITRIX_ADMIN_EMAILS || getBitrixEnv().BITRIX_ADMIN_EMAILS;
+  const raw = process.env.BITRIX_ADMIN_EMAILS || "";
   return new Set(
     raw
       .split(",")

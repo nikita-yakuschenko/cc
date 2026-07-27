@@ -1,6 +1,6 @@
 import type { OAuthConfig } from "next-auth/providers";
 import { prisma } from "@/server/db";
-import { getBitrixAdminEmails, getBitrixEnv } from "@/lib/env";
+import { getBitrixAdminEmails } from "@/lib/env";
 import { GUEST_USER_EMAIL } from "@/lib/constants";
 
 export type BitrixProfile = {
@@ -22,7 +22,23 @@ type BitrixTokenResponse = {
 };
 
 function portalBase(): string {
-  return getBitrixEnv().BITRIX_PORTAL_URL.replace(/\/$/, "");
+  const url = process.env.BITRIX_PORTAL_URL?.trim();
+  if (!url) {
+    throw new Error("BITRIX_PORTAL_URL is not configured");
+  }
+  return url.replace(/\/$/, "");
+}
+
+function bitrixClientId(): string {
+  const id = process.env.BITRIX_CLIENT_ID?.trim();
+  if (!id) throw new Error("BITRIX_CLIENT_ID is not configured");
+  return id;
+}
+
+function bitrixClientSecret(): string {
+  const secret = process.env.BITRIX_CLIENT_SECRET?.trim();
+  if (!secret) throw new Error("BITRIX_CLIENT_SECRET is not configured");
+  return secret;
 }
 
 function isBitrixActive(profile: BitrixProfile): boolean {
@@ -86,15 +102,19 @@ export async function syncBitrixUser(profile: BitrixProfile) {
 }
 
 export function BitrixProvider(): OAuthConfig<BitrixProfile> {
-  const env = getBitrixEnv();
-  const portal = portalBase();
+  // Build-time placeholders — реальные значения читаются в runtime-хендлерах
+  const portal =
+    process.env.BITRIX_PORTAL_URL?.replace(/\/$/, "") ||
+    "https://build.invalid";
+  const clientId = process.env.BITRIX_CLIENT_ID || "build-client-id";
+  const clientSecret = process.env.BITRIX_CLIENT_SECRET || "build-client-secret";
 
   return {
     id: "bitrix",
     name: "Bitrix24",
     type: "oauth",
-    clientId: env.BITRIX_CLIENT_ID,
-    clientSecret: env.BITRIX_CLIENT_SECRET,
+    clientId,
+    clientSecret,
     authorization: {
       url: `${portal}/oauth/authorize/`,
       params: { response_type: "code" },
@@ -110,8 +130,8 @@ export function BitrixProvider(): OAuthConfig<BitrixProfile> {
       }) {
         const url = new URL("https://oauth.bitrix24.tech/oauth/token/");
         url.searchParams.set("grant_type", "authorization_code");
-        url.searchParams.set("client_id", String(provider.clientId));
-        url.searchParams.set("client_secret", String(provider.clientSecret));
+        url.searchParams.set("client_id", bitrixClientId());
+        url.searchParams.set("client_secret", bitrixClientSecret());
         url.searchParams.set("code", String(params.code));
 
         const res = await fetch(url.toString(), { method: "GET" });
@@ -143,7 +163,7 @@ export function BitrixProvider(): OAuthConfig<BitrixProfile> {
         };
       }) {
         const endpoint =
-          tokens.client_endpoint || `${portal}/rest/`;
+          tokens.client_endpoint || `${portalBase()}/rest/`;
         const base = endpoint.endsWith("/") ? endpoint : `${endpoint}/`;
         const res = await fetch(
           `${base}user.current.json?auth=${encodeURIComponent(String(tokens.access_token))}`,
