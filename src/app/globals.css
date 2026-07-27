@@ -90,3 +90,17 @@ textarea::placeholder {
     transparent 62%
   );
 }
+
+/* Sonner toasts */
+[data-sonner-toaster][data-y-position="bottom"] {
+  bottom: 20px;
+}
+
+[data-sonner-toast] [data-close-button] {
+  display: none !important;
+}
+
+[data-sonner-toast] {
+  cursor: default;
+  user-select: none;
+}

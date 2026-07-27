@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, IBM_Plex_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { AppToaster } from "@/components/ui/app-toaster";
 import "./globals.css";
 import { APP_NAME } from "@/lib/constants";
 
@@ -37,13 +37,7 @@ export default function RootLayout({
     <html lang="ru">
       <body className={`${sans.variable} ${mono.variable} antialiased`}>
         {children}
-        <Toaster
-          position="top-right"
-          closeButton
-          toastOptions={{
-            className: "font-[family-name:var(--font-manrope)]",
-          }}
-        />
+        <AppToaster />
       </body>
     </html>
   );
