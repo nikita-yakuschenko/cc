@@ -5,8 +5,16 @@ import {
   isValidCustomAlias,
   normalizeUtmValue,
   buildPublicPath,
+  resolveCodeLength,
+  isValidCodeLength,
 } from "@/lib/code";
-import { SAFE_CODE_ALPHABET } from "@/lib/constants";
+import {
+  CODE_LENGTH_MAX,
+  CODE_LENGTH_MIN,
+  CODE_LENGTH_WITH_CATEGORY,
+  CODE_LENGTH_WITHOUT_CATEGORY,
+  SAFE_CODE_ALPHABET,
+} from "@/lib/constants";
 import { analyzeUrl, applyUtmToUrl, isSafeRedirectTarget } from "@/lib/url";
 
 describe("normalizeUtmValue", () => {
@@ -30,12 +38,36 @@ describe("codes", () => {
     }
   });
 
+  it("generates codes from min length 4", () => {
+    const code = generateShortCode(4);
+    expect(code).toHaveLength(4);
+  });
+
+  it("resolves requested code length within bounds", () => {
+    expect(resolveCodeLength(false, 4)).toBe(4);
+    expect(resolveCodeLength(true, 12)).toBe(12);
+    expect(resolveCodeLength(false, null)).toBe(CODE_LENGTH_WITHOUT_CATEGORY);
+    expect(resolveCodeLength(true, undefined)).toBe(CODE_LENGTH_WITH_CATEGORY);
+    expect(resolveCodeLength(false, 3)).toBe(CODE_LENGTH_WITHOUT_CATEGORY);
+    expect(resolveCodeLength(false, CODE_LENGTH_MAX + 1)).toBe(
+      CODE_LENGTH_WITHOUT_CATEGORY,
+    );
+  });
+
+  it("validates code length bounds", () => {
+    expect(isValidCodeLength(CODE_LENGTH_MIN)).toBe(true);
+    expect(isValidCodeLength(CODE_LENGTH_MAX)).toBe(true);
+    expect(isValidCodeLength(3)).toBe(false);
+    expect(isValidCodeLength(CODE_LENGTH_MAX + 1)).toBe(false);
+  });
+
   it("rejects reserved paths and invalid aliases", () => {
     expect(isReservedPath("admin")).toBe(true);
     expect(isReservedPath("links")).toBe(true);
     expect(isReservedPath("utm-settings")).toBe(true);
     expect(isValidCustomAlias("admin")).toBe(false);
-    expect(isValidCustomAlias("ab")).toBe(false);
+    expect(isValidCustomAlias("abc")).toBe(false);
+    expect(isValidCustomAlias("abcd")).toBe(true);
     expect(isValidCustomAlias("modul-120")).toBe(true);
   });
 

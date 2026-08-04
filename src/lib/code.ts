@@ -1,4 +1,6 @@
 import {
+  CODE_LENGTH_MAX,
+  CODE_LENGTH_MIN,
   CODE_LENGTH_WITH_CATEGORY,
   CODE_LENGTH_WITHOUT_CATEGORY,
   CUSTOM_ALIAS_MAX,
@@ -36,6 +38,29 @@ export function defaultCodeLength(hasCategory: boolean): number {
   return hasCategory
     ? CODE_LENGTH_WITH_CATEGORY
     : CODE_LENGTH_WITHOUT_CATEGORY;
+}
+
+export function resolveCodeLength(
+  hasCategory: boolean,
+  requested?: number | null,
+): number {
+  if (
+    typeof requested === "number" &&
+    Number.isInteger(requested) &&
+    requested >= CODE_LENGTH_MIN &&
+    requested <= CODE_LENGTH_MAX
+  ) {
+    return requested;
+  }
+  return defaultCodeLength(hasCategory);
+}
+
+export function isValidCodeLength(length: number): boolean {
+  return (
+    Number.isInteger(length) &&
+    length >= CODE_LENGTH_MIN &&
+    length <= CODE_LENGTH_MAX
+  );
 }
 
 export function isReservedPath(segment: string): boolean {

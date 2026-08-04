@@ -11,12 +11,12 @@ import { canDeleteLinks, isOnlyOwnLinksRole } from "@/server/auth/guards";
 import {
   buildPublicPath,
   buildShortUrl,
-  defaultCodeLength,
   generateShortCode,
   isReservedPath,
   isValidCustomAlias,
   normalizeCode,
   normalizeUtmValue,
+  resolveCodeLength,
 } from "@/server/links/code";
 import {
   analyzeUrl,
@@ -31,6 +31,7 @@ export type CreateLinkInput = {
   originalUrl: string;
   categoryId?: string | null;
   customAlias?: string | null;
+  codeLength?: number | null;
   utmMode: "none" | "keep" | "replace" | "remove";
   utmSource?: string | null;
   utmMedium?: string | null;
@@ -147,13 +148,14 @@ export async function createShortLink(
   if (code) {
     if (!isValidCustomAlias(code)) {
       throw new Error(
-        "Алиас: только латиница, цифры и дефис, длина 3–64, без системных путей",
+        "Алиас: только латиница, цифры и дефис, длина 4–64, без системных путей",
       );
     }
   } else {
+    const length = resolveCodeLength(hasCategory, input.codeLength);
     // generate with collision retries
     for (let attempt = 0; attempt < 8; attempt++) {
-      const candidate = generateShortCode(defaultCodeLength(hasCategory));
+      const candidate = generateShortCode(length);
       const publicPath = buildPublicPath(candidate, categorySlug).toLowerCase();
       const exists = await prisma.shortLink.findUnique({
         where: { publicPath },
@@ -260,7 +262,7 @@ export async function createAnonymousShortLink(
 
   let code = "";
   for (let attempt = 0; attempt < 8; attempt++) {
-    const candidate = generateShortCode(defaultCodeLength(false));
+    const candidate = generateShortCode(resolveCodeLength(false));
     const publicPath = buildPublicPath(candidate).toLowerCase();
     const exists = await prisma.shortLink.findUnique({ where: { publicPath } });
     if (!exists || exists.deletedAt) {

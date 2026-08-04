@@ -21,10 +21,12 @@ export const RESERVED_PATHS = [
 export const SAFE_CODE_ALPHABET =
   "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+export const CODE_LENGTH_MIN = 4;
+export const CODE_LENGTH_MAX = 16;
 export const CODE_LENGTH_WITH_CATEGORY = 5;
 export const CODE_LENGTH_WITHOUT_CATEGORY = 7;
 
-export const CUSTOM_ALIAS_MIN = 3;
+export const CUSTOM_ALIAS_MIN = 4;
 export const CUSTOM_ALIAS_MAX = 64;
 
 export const APP_NAME = "Сокращатель ссылок";

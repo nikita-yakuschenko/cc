@@ -17,6 +17,14 @@ import { analyzeUrl, applyUtmToUrl } from "@/lib/url";
 import { normalizeUtmValue } from "@/lib/code";
 import { getPublicAppUrl } from "@/lib/env-public";
 import {
+  CODE_LENGTH_MAX,
+  CODE_LENGTH_MIN,
+  CODE_LENGTH_WITH_CATEGORY,
+  CODE_LENGTH_WITHOUT_CATEGORY,
+  CUSTOM_ALIAS_MAX,
+  CUSTOM_ALIAS_MIN,
+} from "@/lib/constants";
+import {
   Check,
   CheckCircle2,
   Copy,
@@ -117,10 +125,12 @@ export function CreateLinkWizard({
   categories,
   sources,
   media,
+  campaigns,
 }: {
   categories: CatalogItem[];
   sources: CatalogItem[];
   media: CatalogItem[];
+  campaigns: CatalogItem[];
 }) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [url, setUrl] = useState("");
@@ -130,6 +140,8 @@ export function CreateLinkWizard({
   >("replace");
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [codeMode, setCodeMode] = useState<"auto" | "custom">("auto");
+  const [codeLength, setCodeLength] = useState(CODE_LENGTH_WITHOUT_CATEGORY);
   const [customAlias, setCustomAlias] = useState("");
   const [utmSource, setUtmSource] = useState("");
   const [utmMedium, setUtmMedium] = useState("");
@@ -178,11 +190,14 @@ export function CreateLinkWizard({
   const shortPreview = useMemo(() => {
     const base = getPublicAppUrl();
     const category = categories.find((c) => c.id === categoryId);
-    const code = customAlias || (categoryId ? "•••••" : "•••••••");
+    const code =
+      codeMode === "custom" && customAlias
+        ? customAlias
+        : "•".repeat(codeLength);
     return category?.slug
       ? `${base}/${category.slug}/${code}`
       : `${base}/${code}`;
-  }, [categories, categoryId, customAlias]);
+  }, [categories, categoryId, codeMode, codeLength, customAlias]);
 
   function goScenario() {
     if (!analysis || !analysis.ok) {
@@ -209,7 +224,8 @@ export function CreateLinkWizard({
       name: name || undefined,
       originalUrl: analysis.href,
       categoryId: categoryId || null,
-      customAlias: customAlias || null,
+      customAlias: codeMode === "custom" ? customAlias || null : null,
+      codeLength: codeMode === "auto" ? codeLength : null,
       utmMode,
       utmSource: utmMode === "replace" ? utmSource : null,
       utmMedium: utmMode === "replace" ? utmMedium : null,
@@ -246,6 +262,8 @@ export function CreateLinkWizard({
     setScenario(null);
     setName("");
     setCategoryId("");
+    setCodeMode("auto");
+    setCodeLength(CODE_LENGTH_WITHOUT_CATEGORY);
     setCustomAlias("");
     setUtmSource("");
     setUtmMedium("");
@@ -463,10 +481,29 @@ export function CreateLinkWizard({
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Кампания (utm_campaign)</Label>
-                  <ClearableInput
-                    value={utmCampaign}
+                  <ClearableSelect
+                    value={
+                      campaigns.some((c) => c.slug === utmCampaign)
+                        ? utmCampaign
+                        : ""
+                    }
                     onChange={setUtmCampaign}
-                    placeholder="summer_houses_2026"
+                    placeholder="Выберите кампанию (необязательно)"
+                  >
+                    {campaigns.map((c) => (
+                      <option key={c.id} value={c.slug || ""}>
+                        {c.name} ({c.slug})
+                      </option>
+                    ))}
+                  </ClearableSelect>
+                  <ClearableInput
+                    value={
+                      campaigns.some((c) => c.slug === utmCampaign)
+                        ? ""
+                        : utmCampaign
+                    }
+                    onChange={setUtmCampaign}
+                    placeholder="или введите своё значение"
                   />
                   {utmCampaign ? (
                     <p className="text-xs text-slate-500">
@@ -526,7 +563,7 @@ export function CreateLinkWizard({
           <CardHeader>
             <CardTitle>Категория и короткий адрес</CardTitle>
             <CardDescription>
-              Код генерируется автоматически. Можно задать свой алиас.
+              Выберите длину автокода или задайте свой короткий адрес вручную.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -542,7 +579,20 @@ export function CreateLinkWizard({
               <Label>Категория</Label>
               <Select
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setCategoryId(next);
+                  // подставляем типичную длину, если пользователь не менял вручную
+                  setCodeLength((prev) => {
+                    const wasDefault =
+                      prev === CODE_LENGTH_WITHOUT_CATEGORY ||
+                      prev === CODE_LENGTH_WITH_CATEGORY;
+                    if (!wasDefault) return prev;
+                    return next
+                      ? CODE_LENGTH_WITH_CATEGORY
+                      : CODE_LENGTH_WITHOUT_CATEGORY;
+                  });
+                }}
               >
                 <option value="">Без категории</option>
                 {categories.map((c) => (
@@ -552,18 +602,84 @@ export function CreateLinkWizard({
                 ))}
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Свой алиас (необязательно)</Label>
-              <Input
-                value={customAlias}
-                onChange={(e) => setCustomAlias(e.target.value)}
-                placeholder="modul-120"
-              />
-              <p className="text-xs text-slate-500">
-                Латиница, цифры, дефис. 3–64 символа. Регистр не влияет на
-                уникальность.
-              </p>
+
+            <div className="space-y-3">
+              <Label>Короткий адрес</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setCodeMode("auto")}
+                  className={`rounded-lg border p-4 text-left ${
+                    codeMode === "auto"
+                      ? "border-deep-current bg-canvas"
+                      : "border-border"
+                  }`}
+                >
+                  <p className="font-medium">Сгенерировать</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Случайный код выбранной длины
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCodeMode("custom")}
+                  className={`rounded-lg border p-4 text-left ${
+                    codeMode === "custom"
+                      ? "border-deep-current bg-canvas"
+                      : "border-border"
+                  }`}
+                >
+                  <p className="font-medium">Задать вручную</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Свой короткий адрес
+                  </p>
+                </button>
+              </div>
+
+              {codeMode === "auto" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="code-length">Длина кода</Label>
+                  <Select
+                    id="code-length"
+                    value={String(codeLength)}
+                    onChange={(e) => setCodeLength(Number(e.target.value))}
+                  >
+                    {Array.from(
+                      { length: CODE_LENGTH_MAX - CODE_LENGTH_MIN + 1 },
+                      (_, i) => CODE_LENGTH_MIN + i,
+                    ).map((n) => (
+                      <option key={n} value={n}>
+                        {n}{" "}
+                        {n === 1
+                          ? "символ"
+                          : n >= 2 && n <= 4
+                            ? "символа"
+                            : "символов"}
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    От {CODE_LENGTH_MIN} до {CODE_LENGTH_MAX} символов.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-alias">Свой короткий адрес</Label>
+                  <Input
+                    id="custom-alias"
+                    value={customAlias}
+                    onChange={(e) => setCustomAlias(e.target.value)}
+                    placeholder="modul-120"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Латиница, цифры, дефис. {CUSTOM_ALIAS_MIN}–
+                    {CUSTOM_ALIAS_MAX} символов. Регистр не влияет на
+                    уникальность.
+                  </p>
+                </div>
+              )}
             </div>
+
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
               <p className="text-slate-500">Предпросмотр:</p>
               <p className="mt-1 font-mono text-sm">{shortPreview}</p>
@@ -572,7 +688,16 @@ export function CreateLinkWizard({
               <Button variant="secondary" onClick={() => setStep(2)}>
                 Назад
               </Button>
-              <Button onClick={create} disabled={loading}>
+              <Button
+                onClick={() => {
+                  if (codeMode === "custom" && !customAlias.trim()) {
+                    toast.error("Укажите короткий адрес или выберите генерацию");
+                    return;
+                  }
+                  create();
+                }}
+                disabled={loading}
+              >
                 {loading ? "Создание…" : "Создать короткую ссылку"}
               </Button>
             </div>

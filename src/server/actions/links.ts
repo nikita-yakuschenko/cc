@@ -13,6 +13,10 @@ import { prisma } from "@/server/db";
 import { writeAuditLog } from "@/server/audit/log";
 import { normalizeUtmValue } from "@/server/links/code";
 import { isReservedPath } from "@/server/links/code";
+import {
+  CODE_LENGTH_MAX,
+  CODE_LENGTH_MIN,
+} from "@/lib/constants";
 
 async function requireUser() {
   const user = await getSessionUser();
@@ -27,6 +31,13 @@ const createLinkSchema = z.object({
   originalUrl: z.string().url(),
   categoryId: z.string().optional().nullable(),
   customAlias: z.string().optional().nullable(),
+  codeLength: z
+    .number()
+    .int()
+    .min(CODE_LENGTH_MIN)
+    .max(CODE_LENGTH_MAX)
+    .optional()
+    .nullable(),
   utmMode: z.enum(["none", "keep", "replace", "remove"]),
   utmSource: z.string().optional().nullable(),
   utmMedium: z.string().optional().nullable(),

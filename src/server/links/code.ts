@@ -3,6 +3,8 @@ export {
   normalizeCode,
   generateShortCode,
   defaultCodeLength,
+  resolveCodeLength,
+  isValidCodeLength,
   isReservedPath,
   isValidCustomAlias,
   buildPublicPath,
